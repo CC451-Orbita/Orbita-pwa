@@ -1,0 +1,30 @@
+[
+  {
+    "id": "ana",
+    "nombre": "Ana",
+    "rol": "Jefa de proyecto",
+    "color": "#F2A65A",
+    "estilo": "dominante"
+  },
+  {
+    "id": "bruno",
+    "nombre": "Bruno",
+    "rol": "Desarrollador",
+    "color": "#5AC8C8",
+    "estilo": "equilibrado"
+  },
+  {
+    "id": "carla",
+    "nombre": "Carla",
+    "rol": "Diseñadora UX",
+    "color": "#C08CF0",
+    "estilo": "equilibrado"
+  },
+  {
+    "id": "diego",
+    "nombre": "Diego",
+    "rol": "Analista (nuevo)",
+    "color": "#7FB77E",
+    "estilo": "silencioso"
+  }
+]

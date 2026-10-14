@@ -1,0 +1,17 @@
+[
+  {
+    "id": "T1",
+    "titulo": "Avance del sprint",
+    "pregunta": "¿Qué bloqueo te preocupa más de este sprint?"
+  },
+  {
+    "id": "T2",
+    "titulo": "Presupuesto del piloto",
+    "pregunta": "¿Ves algún riesgo en el presupuesto propuesto para el piloto?"
+  },
+  {
+    "id": "T3",
+    "titulo": "Fecha de lanzamiento",
+    "pregunta": "¿La fecha del 30 de noviembre es realista desde tu área?"
+  }
+]

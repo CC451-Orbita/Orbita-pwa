@@ -1,0 +1,34 @@
+digraph G {
+  graph [rankdir=LR, fontname="DejaVu Sans", nodesep=0.35, ranksep=0.55, bgcolor="white", label="Diagrama de interacción entre pantallas – Órbita", labelloc=t, fontsize=16];
+  node [shape=box, style="rounded,filled", fontname="DejaVu Sans", fontsize=10, fillcolor="#E6E2FC", color="#6F5ED8", margin="0.15,0.08"];
+  edge [fontname="DejaVu Sans", fontsize=8.5, color="#444444"];
+  P1 [label="P1 Bienvenida\n+ consentimiento"];
+  P2 [label="P2 Perfil\n(planeta, emoción,\naccesibilidad)"];
+  P3 [label="P3 Salas\n(unirse / lista)"];
+  P4 [label="P4 Crear sala\n(modo, estilo, agenda)"];
+  P5 [label="P5 Reunión\n(sistema solar +\nsubtítulos)", fillcolor="#8C7CF0", fontcolor=white];
+  P6 [label="P6 Invitación privada\n(ventana de órbita)", fillcolor="#FFE3B0"];
+  P7 [label="P7 Aporte escrito", fillcolor="#FFE3B0"];
+  P8 [label="P8 Resumen\n(decisiones, equilibrio,\nemoción final)"];
+  P9 [label="P9 Tu evolución\n(reflexión y aprendizaje)"];
+  P10 [label="P10 Ajustes\n(proveedor LLM,\nborrar datos)"];
+  P1 -> P2 [label="Comenzar\n(primera vez)"];
+  P1 -> P3 [label="Comenzar\n(perfil existe)"];
+  P2 -> P3 [label="Guardar"];
+  P3 -> P4 [label="+ Crear sala"];
+  P3 -> P5 [label="Elegir sala /\nUnirme (código)"];
+  P4 -> P5 [label="Iniciar reunión"];
+  P3 -> P9 [label="Ver mi evolución"];
+  P5 -> P6 [label="tema por cerrarse\n(automático)", style=dashed];
+  P6 -> P5 [label="Hablar ahora /\nPaso / 20 s"];
+  P6 -> P7 [label="Escribir aporte"];
+  P5 -> P7 [label="botón ✎ o voz\n\"escribir\""];
+  P7 -> P5 [label="Enviar / Cancelar"];
+  P5 -> P8 [label="⏹ Terminar o\nfin de agenda"];
+  P8 -> P9 [label="Ver mi resumen"];
+  P9 -> P3 [label="Volver a salas"];
+  P10 -> P2 [label="Editar perfil"];
+  P10 -> P1 [label="Borrar datos"];
+  ANY [label="Cualquier pantalla\n(barra superior)", shape=note, fillcolor="#F4F4F4", color="#999999"];
+  ANY -> P10 [label="⚙"];
+}

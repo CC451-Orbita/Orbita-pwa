@@ -1,0 +1,26 @@
+[
+  {
+    "fecha": "2026-09-29",
+    "sala": "Daily del equipo Atlas",
+    "equilibrio": 0.48,
+    "aportesTu": 1
+  },
+  {
+    "fecha": "2026-10-02",
+    "sala": "Daily del equipo Atlas",
+    "equilibrio": 0.55,
+    "aportesTu": 2
+  },
+  {
+    "fecha": "2026-10-06",
+    "sala": "Revisión de presupuesto Q4",
+    "equilibrio": 0.61,
+    "aportesTu": 2
+  },
+  {
+    "fecha": "2026-10-09",
+    "sala": "Daily del equipo Atlas",
+    "equilibrio": 0.7,
+    "aportesTu": 3
+  }
+]

@@ -1,0 +1,149 @@
+/* Órbita – estilos. Paleta espacial cálida y calmada (nivel visceral de Norman). */
+:root {
+  --fondo: #14112B; --fondo2: #1E1A3D; --tarjeta: #26214A; --borde: #3A3366;
+  --texto: #F1EEFF; --sutil: #B4ADD6; --primario: #8C7CF0; --primario-osc: #6F5ED8;
+  --teal: #4FC7C2; --sol: #F5B94A; --peligro: #F07C7C; --ok: #7FD69A;
+  --radio: 14px; --anim: 220ms; /* microinteracciones ≤ 300 ms (RNF-15) */
+}
+body.alto-contraste { --fondo: #000; --fondo2: #000; --tarjeta: #111; --borde: #fff; --texto: #fff; --sutil: #fff; --primario: #FFD400; --primario-osc: #FFD400; --teal: #00FFFF; }
+body.baja-estimulacion *, body.baja-estimulacion *::before { animation: none !important; transition: none !important; }
+@media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html, body { margin: 0; height: 100%; }
+body {
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; font-size: 16px; line-height: 1.45;
+  color: var(--texto);
+  background: radial-gradient(ellipse at 50% -10%, #2E2668 0%, var(--fondo) 60%) fixed, var(--fondo);
+}
+#app { max-width: 560px; margin: 0 auto; min-height: 100%; position: relative; padding-bottom: 24px; }
+.saltar { position: absolute; left: -999px; } .saltar:focus { left: 8px; top: 8px; z-index: 99; background: #fff; color: #000; padding: 6px; }
+:focus-visible { outline: 3px solid var(--teal); outline-offset: 2px; }
+
+.barra { position: sticky; top: 0; z-index: 10; display: flex; align-items: center; gap: 8px; padding: 10px 12px; background: rgba(20,17,43,.88); backdrop-filter: blur(8px); border-bottom: 1px solid var(--borde); }
+.barra h1 { flex: 1; margin: 0; font-size: 18px; text-align: center; }
+.btn-icono { width: 44px; height: 44px; border-radius: 50%; border: 0; background: transparent; color: var(--texto); font-size: 22px; cursor: pointer; }
+.btn-icono:hover { background: var(--tarjeta); }
+
+.pantalla { display: none; padding: 18px 16px; animation: entrar var(--anim) ease-out; }
+.pantalla.activa { display: block; }
+@keyframes entrar { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+h2 { margin: 6px 0 12px; font-size: 22px; } h3 { margin: 16px 0 8px; font-size: 16px; color: var(--sutil); }
+.sutil { color: var(--sutil); font-size: 14px; }
+.etiqueta { font-size: 12px; text-transform: uppercase; letter-spacing: .08em; color: var(--teal); }
+
+/* Botones: objetivos táctiles ≥ 44 px (ley de Fitts, WCAG 2.5.5) */
+.btn { display: block; width: 100%; min-height: 48px; margin: 10px 0; border-radius: var(--radio); border: 0; font: inherit; font-weight: 600; cursor: pointer; transition: transform var(--anim), background var(--anim); }
+.btn:active { transform: scale(.97); }
+.btn:disabled { opacity: .4; cursor: not-allowed; }
+.btn.primario { background: var(--primario); color: #fff; } .btn.primario:hover:not(:disabled) { background: var(--primario-osc); }
+body.alto-contraste .btn.primario { color: #000; }
+.btn.secundario { background: transparent; color: var(--texto); border: 1.5px solid var(--primario); }
+.btn.texto { background: transparent; color: var(--teal); }
+.btn.peligro, .btn-redondo.peligro { color: var(--peligro); }
+.btn.grande { min-height: 56px; font-size: 17px; }
+
+/* Bienvenida */
+.hero { text-align: center; padding: 26px 0 10px; }
+.hero h2 { font-size: 34px; margin: 10px 0 2px; letter-spacing: .02em; }
+.lema { color: var(--sutil); margin: 0; }
+.logo-orbita { position: relative; width: 120px; height: 120px; margin: 0 auto; }
+.logo-orbita span { position: absolute; inset: 42px; border-radius: 50%; background: radial-gradient(#FFE8A8, var(--sol)); box-shadow: 0 0 30px var(--sol); }
+.logo-orbita i { position: absolute; inset: 0; border: 1px dashed var(--borde); border-radius: 50%; animation: girar 14s linear infinite; }
+.logo-orbita i::after { content: ''; position: absolute; top: -6px; left: 50%; width: 12px; height: 12px; border-radius: 50%; background: var(--teal); }
+.logo-orbita i:nth-child(3) { inset: 16px; animation-duration: 9s; } .logo-orbita i:nth-child(3)::after { background: var(--primario); }
+.logo-orbita i:nth-child(4) { inset: 30px; animation-duration: 6s; animation-direction: reverse; } .logo-orbita i:nth-child(4)::after { background: #F2A65A; width: 8px; height: 8px; top: -4px; }
+@keyframes girar { to { transform: rotate(360deg); } }
+.beneficios { list-style: none; padding: 0; margin: 18px 0; }
+.beneficios li { background: var(--tarjeta); border-radius: var(--radio); padding: 12px 14px; margin-bottom: 8px; font-size: 15px; }
+.check { display: flex; gap: 10px; align-items: flex-start; font-size: 14px; margin: 14px 0; cursor: pointer; }
+.check input { width: 22px; height: 22px; margin-top: 2px; accent-color: var(--primario); flex: none; }
+
+/* Formularios */
+.campo { display: block; margin: 12px 0; border: 0; padding: 0; font-size: 14px; color: var(--sutil); }
+.campo legend { margin-bottom: 6px; }
+input:not([type=checkbox]), textarea, select { display: block; width: 100%; margin-top: 6px; min-height: 46px; padding: 10px 12px; border-radius: 10px; border: 1.5px solid var(--borde); background: var(--fondo2); color: var(--texto); font: inherit; }
+textarea { resize: vertical; }
+.switch { display: flex; align-items: center; gap: 10px; min-height: 40px; color: var(--texto); font-size: 15px; cursor: pointer; }
+.switch input { width: 20px; height: 20px; accent-color: var(--teal); }
+.colores { display: flex; gap: 10px; flex-wrap: wrap; }
+.color { width: 40px; height: 40px; border-radius: 50%; border: 3px solid transparent; cursor: pointer; }
+.color[aria-checked=true] { border-color: #fff; transform: scale(1.1); }
+.vista-planeta { display: flex; justify-content: center; padding: 6px; }
+#planeta-preview { width: 76px; height: 76px; border-radius: 50%; box-shadow: 0 0 28px currentColor; transition: background var(--anim); }
+.chip { min-height: 40px; padding: 6px 12px; border-radius: 20px; border: 1.5px solid var(--borde); background: var(--tarjeta); color: var(--texto); font: inherit; font-size: 14px; cursor: pointer; }
+.chip.activo, .chip[aria-checked=true] { background: var(--primario); border-color: var(--primario); color: #fff; }
+.chip.mini { min-height: 32px; padding: 2px 10px; }
+.emociones { display: flex; gap: 8px; flex-wrap: wrap; }
+.segmentado { display: flex; background: var(--fondo2); border-radius: 12px; padding: 4px; }
+.seg { flex: 1; min-height: 42px; border: 0; border-radius: 9px; background: transparent; color: var(--sutil); font: inherit; cursor: pointer; }
+.seg.activo { background: var(--tarjeta); color: var(--texto); box-shadow: 0 0 0 1.5px var(--primario); }
+.agenda { margin: 0; padding-left: 20px; color: var(--texto); } .agenda li { margin: 6px 0; }
+.codigo-generado { background: var(--tarjeta); padding: 12px; border-radius: var(--radio); text-align: center; margin-top: 12px; }
+.codigo-generado b { color: var(--teal); letter-spacing: .1em; }
+
+/* Salas */
+.saludo h2 { margin-bottom: 2px; }
+.fila-unirse { display: flex; gap: 10px; align-items: flex-end; } .crece { flex: 1; } .fila-unirse .btn { width: auto; padding: 0 18px; margin-bottom: 12px; }
+.lista-salas { list-style: none; padding: 0; margin: 0; }
+.lista-salas li button { width: 100%; display: flex; justify-content: space-between; align-items: center; gap: 8px; text-align: left; background: var(--tarjeta); border: 1px solid var(--borde); color: var(--texto); border-radius: var(--radio); padding: 12px 14px; margin-bottom: 8px; font: inherit; cursor: pointer; }
+.lista-salas small { color: var(--sutil); display: block; }
+.punto { width: 10px; height: 10px; border-radius: 50%; background: var(--ok); flex: none; box-shadow: 0 0 8px var(--ok); } .punto.off { background: var(--borde); box-shadow: none; }
+
+/* Reunión */
+.reunion-cab { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
+.reunion-cab h2 { font-size: 19px; margin: 2px 0 0; }
+.vel { display: flex; gap: 4px; flex: none; }
+.aviso-ambiental { text-align: center; color: var(--sol); font-weight: 600; margin: 8px 0 0; animation: latido 1.6s ease-in-out infinite; }
+@keyframes latido { 50% { opacity: .55; } }
+.escena { position: relative; }
+.orbitas svg { width: 100%; height: auto; display: block; }
+.orbita-equilibrio { stroke: var(--teal); stroke-width: 1.2; stroke-dasharray: 4 6; opacity: .5; }
+.orbita-traza { stroke: #fff; stroke-opacity: .06; }
+.anillo-ventana { stroke: var(--sol); stroke-width: 0; opacity: 0; transition: all 400ms; }
+.anillo-ventana.activa { stroke-width: 22; opacity: .16; }
+.etiqueta-planeta { fill: var(--texto); font-size: 13px; font-weight: 600; paint-order: stroke; stroke: var(--fondo); stroke-width: 3px; }
+.planeta circle { transition: opacity 400ms; }
+.lista-accesible { list-style: none; padding: 0; margin: 8px 0; }
+.lista-accesible li { display: flex; align-items: center; gap: 10px; padding: 8px 10px; background: var(--tarjeta); border-radius: 10px; margin-bottom: 6px; font-size: 15px; }
+.lista-accesible .bola { width: 14px; height: 14px; border-radius: 50%; flex: none; }
+.subtitulos { min-height: 74px; background: rgba(0,0,0,.35); border-radius: var(--radio); padding: 8px 12px; font-size: 15px; }
+.subtitulos p { margin: 3px 0; } .subtitulos b { font-weight: 700; }
+body.sin-subtitulos .subtitulos { display: none; }
+.controles { display: flex; justify-content: center; gap: 16px; margin: 14px 0 4px; }
+.btn-redondo { width: 60px; height: 60px; border-radius: 50%; border: 1.5px solid var(--borde); background: var(--tarjeta); color: var(--texto); font-size: 24px; cursor: pointer; transition: transform var(--anim), background var(--anim); }
+.btn-redondo:active { transform: scale(.92); }
+.btn-redondo.escuchando { background: var(--peligro); border-color: var(--peligro); animation: latido 1s infinite; }
+.estado-voz { text-align: center; font-size: 13px; color: var(--sutil); min-height: 18px; margin: 4px 0; }
+.toast-privado { background: #3A2B12; border: 1px solid var(--sol); color: #FFE3B0; border-radius: var(--radio); padding: 10px 12px; font-size: 14px; margin-top: 10px; }
+
+/* Modales (hoja inferior) */
+.modal { position: fixed; inset: 0; z-index: 30; background: rgba(8,6,20,.6); display: flex; align-items: flex-end; justify-content: center; }
+.modal[hidden] { display: none; }
+.hoja { width: 100%; max-width: 560px; background: var(--fondo2); border-top: 2px solid var(--sol); border-radius: 22px 22px 0 0; padding: 20px 18px 26px; animation: subir var(--anim) ease-out; }
+@keyframes subir { from { transform: translateY(40px); opacity: 0; } }
+.pregunta { font-size: 19px; font-weight: 600; margin: 6px 0 14px; }
+.cuenta { height: 4px; background: var(--borde); border-radius: 4px; overflow: hidden; margin-top: 8px; }
+.cuenta div { height: 100%; background: var(--sol); width: 100%; }
+.fila { display: flex; gap: 10px; } .fila .btn { flex: 1; }
+
+/* Resumen e informe */
+.tarjeta { background: var(--tarjeta); border-radius: var(--radio); padding: 12px 14px; margin: 10px 0; }
+.tarjeta h3 { margin: 2px 0 8px; color: var(--texto); }
+.tarjeta ul { margin: 0; padding-left: 18px; }
+.medidor { height: 12px; background: var(--fondo2); border-radius: 6px; overflow: hidden; }
+#res-medidor { height: 100%; background: linear-gradient(90deg, var(--primario), var(--teal)); width: 0; transition: width 800ms ease-out; }
+.barras .barra-p { display: flex; align-items: center; gap: 8px; font-size: 13px; margin: 5px 0; }
+.barras .barra-p span:first-child { width: 70px; } .barras .pista { flex: 1; height: 8px; background: var(--fondo2); border-radius: 4px; overflow: hidden; } .barras .pista div { height: 100%; }
+.reflexion p { font-size: 18px; margin: 4px 0; }
+.grafico svg { width: 100%; height: auto; }
+
+/* Simulación guiada y toast */
+.guia { position: fixed; left: 0; right: 0; top: 0; z-index: 50; display: flex; justify-content: center; pointer-events: none; }
+.guia-caja { display: flex; align-items: center; gap: 8px; max-width: 560px; width: 100%; margin: 4px 8px; background: rgba(79,199,194,.96); color: #062221; font-weight: 600; font-size: 14px; padding: 8px 10px; border-radius: 12px; box-shadow: 0 6px 20px rgba(0,0,0,.4); }
+.guia-texto { flex: 1; }
+.guia .btn { pointer-events: auto; width: auto; margin: 0; min-height: 32px; padding: 0 10px; background: rgba(0,0,0,.55); color: #fff; font-size: 12px; }
+.toast { position: fixed; left: 50%; bottom: 20px; transform: translateX(-50%); z-index: 60; background: var(--texto); color: var(--fondo); padding: 10px 16px; border-radius: 12px; font-weight: 600; max-width: 90%; }
+#main:focus { outline: none; }
+body.alto-contraste { background: #000; }

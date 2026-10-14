@@ -1,0 +1,30 @@
+digraph G {
+  graph [rankdir=TB, fontname="DejaVu Sans", nodesep=0.45, ranksep=0.7, bgcolor="white", label="Diagrama C4 – Nivel 2: Contenedores y componentes de la PWA", labelloc=t, fontsize=16, compound=true];
+  node [shape=box, style="rounded,filled", fontname="DejaVu Sans", fontsize=10, color="#3A3366", margin="0.2,0.1"];
+  edge [fontname="DejaVu Sans", fontsize=8.5, color="#555555"];
+  u [label="Usuario\n[Persona]", fillcolor="#08427B", fontcolor=white];
+  subgraph cluster_pwa {
+    label="Órbita PWA [Navegador: laptop o móvil]"; fontname="DejaVu Sans"; fontsize=12; style="dashed,rounded"; color="#8C7CF0";
+    ui [label="Interfaz (app.js + index.html)\n10 pantallas, navegación,\nmodales accesibles", fillcolor="#C9C1FA"];
+    orb [label="Visualización orbital\n(orbits.js – SVG)\nplanetas, anillo de equilibrio", fillcolor="#C9C1FA"];
+    sala [label="Motor de reunión\n(room.js)\nmétricas por tema, ventana de\nórbita, multiusuario", fillcolor="#C9C1FA"];
+    voz [label="Módulo de voz\n(voice.js)\nreconocimiento, TTS,\ncomandos, vibración", fillcolor="#C9C1FA"];
+    llm [label="Capa de abstracción LLM\n(llm.js)\nSimulado | Gemini | Ollama\n+ validador de tono", fillcolor="#C9C1FA"];
+    perf [label="Perfil persistente\n(profile.js)\npreferencias, ritmo,\nrespuestas, emociones", fillcolor="#C9C1FA"];
+    demo [label="Simulación guiada\n(demo.js)", fillcolor="#E6E2FC"];
+    sw [label="Service Worker (sw.js)\ncaché offline", fillcolor="#E6E2FC"];
+  }
+  ls [label="localStorage\n[Almacén del navegador]", shape=cylinder, fillcolor="#FFE3B0"];
+  data [label="Datos simulados\n(data/*.json, simulated.js)", shape=cylinder, fillcolor="#FFE3B0"];
+  g [label="Gemini API\n[externo]", fillcolor="#999999", fontcolor=white];
+  ol [label="Ollama local\n[externo]", fillcolor="#999999", fontcolor=white];
+  ws [label="Web Speech API\n[externo]", fillcolor="#999999", fontcolor=white];
+  bc [label="BroadcastChannel /\nSupabase Realtime", fillcolor="#999999", fontcolor=white];
+  u -> ui [label="toques, voz, teclado"];
+  ui -> orb; ui -> sala; ui -> voz; ui -> perf; demo -> ui [label="automatiza"];
+  sala -> llm [label="pide invitación\ny resumen"];
+  ui -> llm;
+  llm -> g [label="HTTPS"]; llm -> ol [label="HTTP local"];
+  voz -> ws; sala -> bc [label="eventos de sala"];
+  perf -> ls; sala -> data [label="guion"];
+}

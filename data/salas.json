@@ -1,0 +1,23 @@
+[
+  {
+    "codigo": "ORB-4821",
+    "nombre": "Daily del equipo Atlas",
+    "modo": "videollamada",
+    "integrantes": 5,
+    "activa": true
+  },
+  {
+    "codigo": "ORB-1093",
+    "nombre": "Revisión de presupuesto Q4",
+    "modo": "presencial",
+    "integrantes": 7,
+    "activa": true
+  },
+  {
+    "codigo": "ORB-7755",
+    "nombre": "Clase CC451 – grupo 3",
+    "modo": "videollamada",
+    "integrantes": 3,
+    "activa": false
+  }
+]

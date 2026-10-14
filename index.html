@@ -1,0 +1,238 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#14112B">
+  <meta name="description" content="Órbita: PWA que equilibra la participación en reuniones con voz, LLM y una interfaz de planetas.">
+  <title>Órbita – reuniones equilibradas</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+<a class="saltar" href="#main">Saltar al contenido</a>
+<div id="app">
+
+  <!-- Barra superior con flecha de regreso dentro de la app -->
+  <header class="barra" id="barra" hidden>
+    <button class="btn-icono" id="btn-atras" aria-label="Regresar">←</button>
+    <h1 id="titulo-barra">Órbita</h1>
+    <button class="btn-icono" id="btn-ajustes" aria-label="Ajustes">⚙</button>
+  </header>
+
+  <main id="main" tabindex="-1">
+
+    <!-- P1. Bienvenida + consentimiento -->
+    <section class="pantalla activa" id="p-bienvenida" data-titulo="Bienvenida">
+      <div class="hero">
+        <div class="logo-orbita" aria-hidden="true"><span></span><i></i><i></i><i></i></div>
+        <h2>Órbita</h2>
+        <p class="lema">Que todas las voces encuentren su órbita.</p>
+      </div>
+      <ul class="beneficios">
+        <li><b>🪐 Cada persona es un planeta.</b> Su distancia al sol muestra cuánto ha participado, sin números ni rankings.</li>
+        <li><b>🎙 Voz y texto.</b> Habla o escribe: los dos cuentan igual.</li>
+        <li><b>✨ Invitaciones privadas.</b> Nadie te señala frente al grupo.</li>
+      </ul>
+      <label class="check">
+        <input type="checkbox" id="chk-consentimiento">
+        <span>Acepto que Órbita transcriba mi voz durante la reunión. <b>No se guarda audio</b> y la transcripción se borra al terminar, salvo que yo la guarde.</span>
+      </label>
+      <button class="btn primario grande" id="btn-empezar" disabled>Comenzar</button>
+      <button class="btn texto" id="btn-demo-rapida">▶ Ver simulación guiada</button>
+    </section>
+
+    <!-- P2. Perfil -->
+    <section class="pantalla" id="p-perfil" data-titulo="Tu perfil">
+      <h2>Crea tu planeta</h2>
+      <div class="vista-planeta"><div id="planeta-preview"></div></div>
+      <label class="campo">Nombre<input id="in-nombre" autocomplete="given-name" placeholder="Ej.: Anngie" maxlength="20"></label>
+      <fieldset class="campo">
+        <legend>Color de tu planeta</legend>
+        <div class="colores" id="colores" role="radiogroup"></div>
+      </fieldset>
+      <fieldset class="campo">
+        <legend>¿Cómo te sientes antes de reunirte?</legend>
+        <div class="emociones" role="radiogroup" id="emo-inicio">
+          <button class="chip" data-emo="tranquilo" role="radio" aria-checked="false">😌 Tranquilo</button>
+          <button class="chip" data-emo="normal" role="radio" aria-checked="false">🙂 Normal</button>
+          <button class="chip" data-emo="nervioso" role="radio" aria-checked="false">😟 Nervioso</button>
+        </div>
+      </fieldset>
+      <fieldset class="campo">
+        <legend>Accesibilidad</legend>
+        <label class="switch"><input type="checkbox" data-acc="subtitulos" checked><span>Subtítulos con nombre del hablante</span></label>
+        <label class="switch"><input type="checkbox" data-acc="vozTTS"><span>Leer invitaciones en voz alta</span></label>
+        <label class="switch"><input type="checkbox" data-acc="vibracion" checked><span>Vibración al recibir invitaciones</span></label>
+        <label class="switch"><input type="checkbox" data-acc="bajaEstimulacion"><span>Baja estimulación (sin animaciones)</span></label>
+        <label class="switch"><input type="checkbox" data-acc="altoContraste"><span>Alto contraste</span></label>
+        <label class="switch"><input type="checkbox" data-acc="listaAccesible"><span>Mostrar lista accesible junto a las órbitas</span></label>
+      </fieldset>
+      <button class="btn primario grande" id="btn-guardar-perfil">Guardar y continuar</button>
+    </section>
+
+    <!-- P3. Salas -->
+    <section class="pantalla" id="p-salas" data-titulo="Salas">
+      <div class="saludo"><h2 id="saludo">Hola</h2><p class="sutil" id="aprendizaje"></p></div>
+      <div class="fila-unirse">
+        <label class="campo crece">Código de sala<input id="in-codigo" placeholder="ORB-0000" maxlength="8"></label>
+        <button class="btn secundario" id="btn-unirse">Unirme</button>
+      </div>
+      <h3>Tus salas</h3>
+      <ul class="lista-salas" id="lista-salas"></ul>
+      <button class="btn primario grande" id="btn-ir-crear">＋ Crear sala</button>
+      <button class="btn texto" id="btn-ir-informe">📈 Ver mi evolución</button>
+    </section>
+
+    <!-- P4. Crear sala -->
+    <section class="pantalla" id="p-crear" data-titulo="Crear sala">
+      <h2>Nueva sala</h2>
+      <label class="campo">Nombre de la reunión<input id="in-sala-nombre" value="Daily del equipo Atlas"></label>
+      <fieldset class="campo">
+        <legend>Modo</legend>
+        <div class="segmentado" role="radiogroup">
+          <button class="seg activo" data-modo="videollamada" role="radio" aria-checked="true">💻 Videollamada</button>
+          <button class="seg" data-modo="presencial" role="radio" aria-checked="false">👥 Presencial</button>
+        </div>
+      </fieldset>
+      <fieldset class="campo">
+        <legend>Estilo de moderación</legend>
+        <div class="segmentado" role="radiogroup">
+          <button class="seg activo" data-estilo="suave" role="radio" aria-checked="true">🌙 Suave</button>
+          <button class="seg" data-estilo="neutral" role="radio" aria-checked="false">☀ Neutral</button>
+        </div>
+      </fieldset>
+      <fieldset class="campo">
+        <legend>Agenda (temas)</legend>
+        <ol class="agenda" id="agenda-crear"></ol>
+      </fieldset>
+      <p class="sutil">El umbral de invitación se calibra solo según la duración y el tipo de reunión.</p>
+      <div class="codigo-generado">Código para compartir: <b id="codigo-nuevo">ORB-4821</b></div>
+      <button class="btn primario grande" id="btn-iniciar-reunion">Iniciar reunión</button>
+    </section>
+
+    <!-- P5. Reunión (interfaz orbital) -->
+    <section class="pantalla" id="p-reunion" data-titulo="Reunión">
+      <div class="reunion-cab">
+        <div><span class="etiqueta">Tema actual</span><h2 id="tema-actual">—</h2></div>
+        <div class="vel" aria-label="Velocidad de la simulación">
+          <button class="chip mini" data-vel="1">1×</button><button class="chip mini activo" data-vel="2">2×</button><button class="chip mini" data-vel="4">4×</button>
+        </div>
+      </div>
+      <div class="aviso-ambiental" id="aviso-ambiental" aria-live="polite" hidden>✦ Se abre una ventana de órbita</div>
+      <div class="escena">
+        <div id="orbitas" class="orbitas"></div>
+        <ul id="lista-accesible" class="lista-accesible" aria-live="polite" hidden></ul>
+      </div>
+      <div class="subtitulos" id="subtitulos" aria-live="polite"></div>
+      <div class="toast-privado" id="toast-dominante" hidden></div>
+      <div class="controles">
+        <button class="btn-redondo" id="btn-mic" aria-label="Hablar (micrófono)">🎙</button>
+        <button class="btn-redondo" id="btn-escribir" aria-label="Escribir un aporte">✎</button>
+        <button class="btn-redondo" id="btn-lista" aria-label="Cambiar a lista accesible">☰</button>
+        <button class="btn-redondo peligro" id="btn-terminar" aria-label="Terminar reunión">⏹</button>
+      </div>
+      <p class="estado-voz" id="estado-voz" aria-live="polite"></p>
+    </section>
+
+    <!-- P8. Resumen de la reunión -->
+    <section class="pantalla" id="p-resumen" data-titulo="Resumen">
+      <h2>Resumen de la reunión</h2>
+      <div class="tarjeta"><h3>✅ Decisiones</h3><ul id="res-decisiones"></ul></div>
+      <div class="tarjeta"><h3>⏳ Temas abiertos</h3><ul id="res-abiertos"></ul></div>
+      <div class="tarjeta"><h3>🪐 Equilibrio de la reunión</h3>
+        <div class="medidor"><div id="res-medidor"></div></div>
+        <p id="res-equilibrio" class="sutil"></p>
+        <div id="res-barras" class="barras"></div>
+      </div>
+      <fieldset class="campo">
+        <legend>¿Cómo te fue?</legend>
+        <div class="emociones" id="emo-fin">
+          <button class="chip" data-emo="escuchado">🌟 Me sentí escuchado</button>
+          <button class="chip" data-emo="neutral">🙂 Normal</button>
+          <button class="chip" data-emo="incomodo">😕 Incómodo</button>
+        </div>
+      </fieldset>
+      <p class="sutil" id="res-proveedor"></p>
+      <button class="btn primario grande" id="btn-ver-reflexion">Ver mi resumen personal</button>
+      <button class="btn texto" id="btn-guardar-transcripcion">💾 Guardar transcripción</button>
+    </section>
+
+    <!-- P9. Informe personal y de equidad (nivel reflexivo) -->
+    <section class="pantalla" id="p-informe" data-titulo="Tu evolución">
+      <h2>Tu órbita en el tiempo</h2>
+      <div class="tarjeta reflexion"><p id="inf-reflexion">—</p></div>
+      <div class="tarjeta"><h3>Equilibrio de tus reuniones</h3><div id="inf-grafico" class="grafico"></div></div>
+      <div class="tarjeta"><h3>Lo que Órbita aprendió de ti</h3><ul id="inf-aprendizaje"></ul></div>
+      <button class="btn primario grande" id="btn-volver-salas">Volver a salas</button>
+    </section>
+
+    <!-- P10. Ajustes -->
+    <section class="pantalla" id="p-ajustes" data-titulo="Ajustes">
+      <h2>Ajustes</h2>
+      <fieldset class="campo">
+        <legend>Proveedor de IA (capa de abstracción)</legend>
+        <select id="sel-proveedor">
+          <option value="simulado">Simulado (sin red) – recomendado para la demo</option>
+          <option value="gemini">Gemini (API remota)</option>
+          <option value="ollama">Ollama (LLM local en esta laptop)</option>
+        </select>
+        <label class="campo" id="campo-key">API key de Gemini<input id="in-apikey" type="password" placeholder="AIza…" autocomplete="off"></label>
+        <p class="sutil">La key se guarda solo en este navegador. Si el proveedor falla, Órbita usa el simulado automáticamente.</p>
+      </fieldset>
+      <button class="btn secundario" id="btn-probar-llm">Probar proveedor</button>
+      <p class="sutil" id="resultado-llm"></p>
+      <button class="btn secundario" id="btn-editar-perfil">Editar perfil y accesibilidad</button>
+      <button class="btn texto peligro" id="btn-borrar">Borrar todos mis datos</button>
+    </section>
+  </main>
+
+  <!-- P6. Invitación privada (ventana de órbita) -->
+  <div class="modal" id="m-invitacion" role="dialog" aria-modal="true" aria-labelledby="inv-titulo" hidden>
+    <div class="hoja">
+      <span class="etiqueta">Solo tú ves esto</span>
+      <h2 id="inv-titulo">✦ Tu ventana de órbita</h2>
+      <p class="pregunta" id="inv-pregunta"></p>
+      <div class="acciones-inv" id="acciones-inv">
+        <button class="btn primario" data-resp="hablar">🎙 Hablar ahora</button>
+        <button class="btn secundario" data-resp="escribir">✎ Escribir aporte</button>
+        <button class="btn texto" data-resp="paso">Paso esta vez</button>
+      </div>
+      <div class="cuenta"><div id="inv-cuenta"></div></div>
+    </div>
+  </div>
+
+  <!-- P7. Aporte escrito -->
+  <div class="modal" id="m-escribir" role="dialog" aria-modal="true" aria-labelledby="esc-titulo" hidden>
+    <div class="hoja">
+      <h2 id="esc-titulo">Escribe tu aporte</h2>
+      <p class="sutil">Cuenta igual que hablar. Órbita lo resume en una línea para el grupo.</p>
+      <textarea id="in-aporte" rows="4" placeholder="Escribe aquí tu idea…"></textarea>
+      <label class="check"><input type="checkbox" id="chk-anonimo"><span>Mostrar como aporte anónimo</span></label>
+      <div class="fila">
+        <button class="btn texto" id="btn-cancelar-escribir">Cancelar</button>
+        <button class="btn primario" id="btn-enviar-aporte">Enviar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Capa de la simulación guiada -->
+  <div class="guia" id="guia" hidden>
+    <div class="guia-caja"><div class="guia-texto" id="guia-texto"></div>
+    <button class="btn" id="btn-salir-guia" aria-label="Salir de la simulación">✕ Salir</button></div>
+  </div>
+  <div class="toast" id="toast" role="status" hidden></div>
+</div>
+
+<script src="data/simulated.js"></script>
+<script src="js/profile.js"></script>
+<script src="js/llm.js"></script>
+<script src="js/voice.js"></script>
+<script src="js/orbits.js"></script>
+<script src="js/room.js"></script>
+<script src="js/app.js"></script>
+<script src="js/demo.js"></script>
+</body>
+</html>

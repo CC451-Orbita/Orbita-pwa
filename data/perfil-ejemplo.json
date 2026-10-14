@@ -1,0 +1,42 @@
+{
+  "nombre": "Frank",
+  "color": "#4FC7C2",
+  "consentimiento": true,
+  "accesibilidad": {
+    "subtitulos": true,
+    "bajaEstimulacion": false,
+    "altoContraste": false,
+    "vozTTS": false,
+    "vibracion": true,
+    "listaAccesible": false
+  },
+  "canalPreferido": "escribir",
+  "toleranciaSilencioSeg": 25,
+  "ritmoPalabrasMin": 128,
+  "respuestas": {
+    "hablar": 3,
+    "escribir": 5,
+    "paso": 1,
+    "sinRespuesta": 1
+  },
+  "emociones": [
+    {
+      "fecha": "2026-10-09T15:00:00Z",
+      "momento": "inicio",
+      "valor": "nervioso",
+      "origen": "declarada"
+    },
+    {
+      "fecha": "2026-10-09T15:40:00Z",
+      "momento": "fin",
+      "valor": "escuchado",
+      "origen": "declarada"
+    }
+  ],
+  "reuniones": 4,
+  "aportesTotales": 8,
+  "llm": {
+    "proveedor": "simulado",
+    "apiKey": ""
+  }
+}
