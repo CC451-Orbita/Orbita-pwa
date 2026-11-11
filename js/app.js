@@ -15,6 +15,7 @@
   function ir(id, { atras = false } = {}) {
     if (pantallaActual === 'p-antesala') window.PrepUI.detener();
     if (pantallaActual === 'p-preparar') window.Voz.detener();
+    if (pantallaActual === 'p-asistente') window.Asistente.cerrar();
     if (pantallaActual === 'p-reunion' && id !== 'p-reunion') {
       detenerInterfazReunion();
       if (id !== 'p-resumen') window.Sala.salir();
@@ -130,6 +131,7 @@
     ir('p-antesala');
   });
   $('#btn-ir-crear').addEventListener('click', () => ir('p-crear'));
+  $('#btn-ir-asistente').addEventListener('click', () => ir('p-asistente'));
   $('#btn-ir-informe').addEventListener('click', () => ir('p-informe'));
 
   /* ---------- P4 Crear sala ---------- */
@@ -552,6 +554,7 @@
 
   const alEntrar = {
     'p-bienvenida': pintarBienvenida,
+    'p-asistente': () => window.Asistente.abrir(),
     'p-perfil': pintarPerfil, 'p-salas': pintarSalas, 'p-crear': pintarCrear,
     'p-reunion': iniciarReunion, 'p-resumen': pintarResumen, 'p-informe': pintarInforme, 'p-ajustes': pintarAjustes,
     'p-antesala': () => window.PrepUI.pintarAntesala(), 'p-preparar': () => window.PrepUI.pintarPreparar()

@@ -4,8 +4,9 @@
   "description": "PWA que equilibra la participación en reuniones con voz, LLM e interfaz orbital (CC451 – UNI).",
   "private": true,
   "license": "MIT",
+  "engines": { "node": ">=22" },
   "scripts": {
-    "start": "python3 -m http.server 8000",
-    "test": "node tests/run.js"
+    "start": "node --env-file-if-exists=.env backend/server.cjs",
+    "test": "node tests/run.js && node --test tests/backend.test.cjs"
   }
 }

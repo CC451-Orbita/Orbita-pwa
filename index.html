@@ -83,6 +83,7 @@
       <h3>Tus salas</h3>
       <ul class="lista-salas" id="lista-salas"></ul>
       <button class="btn primario grande" id="btn-ir-crear">＋ Crear sala</button>
+      <button class="btn secundario" id="btn-ir-asistente">Asistente de voz</button>
       <button class="btn texto" id="btn-ir-informe">📈 Ver mi evolución</button>
     </section>
 
@@ -214,6 +215,29 @@
       <button class="btn primario grande" id="btn-volver-salas">Volver a salas</button>
     </section>
 
+    <section class="pantalla" id="p-asistente" data-titulo="Asistente de voz">
+      <h2>Asistente de voz</h2>
+      <label class="campo">Tema de la agenda
+        <select id="asistente-tema">
+          <option value="">Sin tema específico</option>
+        </select>
+      </label>
+      <ol class="asistente-conversacion" id="asistente-historial" aria-label="Conversación con el asistente" role="log"></ol>
+      <form id="asistente-formulario">
+        <label class="campo">Tu mensaje
+          <textarea id="asistente-mensaje" rows="3" maxlength="2000"></textarea>
+        </label>
+        <p class="sutil" id="asistente-privacidad">Gemini procesa la grabación al detenerla y el texto al enviarlo. Puedes revisar la transcripción antes de conversar.</p>
+        <div class="fila">
+          <button class="btn secundario" type="button" id="asistente-grabar" aria-pressed="false" aria-describedby="asistente-privacidad" disabled>Grabar mensaje</button>
+          <button class="btn primario" type="submit" id="asistente-enviar" disabled>Enviar mensaje</button>
+        </div>
+      </form>
+      <button class="btn secundario" type="button" id="asistente-escuchar" hidden>Escuchar última respuesta</button>
+      <audio id="asistente-audio" controls aria-label="Respuesta sintetizada" hidden></audio>
+      <p class="sutil" id="asistente-estado" role="status"></p>
+    </section>
+
     <!-- P10. Ajustes -->
     <section class="pantalla" id="p-ajustes" data-titulo="Ajustes">
       <h2>Ajustes</h2>
@@ -295,6 +319,7 @@
 <script src="js/voice.js"></script>
 <script src="js/orbits.js"></script>
 <script src="js/room.js"></script>
+<script src="js/asistente.js"></script>
 <script src="js/app.js"></script>
 <script src="js/prep.js"></script>
 <script src="js/demo.js"></script>

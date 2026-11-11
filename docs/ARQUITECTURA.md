@@ -90,3 +90,16 @@ sequenceDiagram
   R->>R: registra aporte, actualiza perfil y órbita
   R->>G: cierra tema y guarda decisión
 ```
+
+## Backend del asistente de voz
+
+El servidor Node.js sirve la PWA y expone la API local del asistente. `js/asistente.js` graba con `MediaRecorder`, permite revisar el texto y reproduce las respuestas en un control de audio. `backend/gemini.cjs` conecta las tres operaciones con Gemini usando la clave del servidor.
+
+| Ruta | Función |
+|---|---|
+| `GET /api/asistente/estado` | Informa si el servidor tiene una clave configurada |
+| `POST /api/asistente/transcribir` | Recibe una grabación y devuelve el texto |
+| `POST /api/asistente/responder` | Recibe el mensaje, el tema opcional y hasta ocho turnos previos |
+| `POST /api/asistente/voz` | Devuelve la respuesta hablada en formato WAV |
+
+El asistente conserva los turnos en memoria en el navegador y descarta la conversación al salir. El backend opera sin base de datos y la API queda fuera del caché de la PWA.

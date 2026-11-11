@@ -3,9 +3,9 @@
 ## Requisitos
 
 - Laptop con Windows, macOS o Linux, o un celular Android/iOS.
-- Navegador **Google Chrome** o **Microsoft Edge** (recomendado: tienen reconocimiento de voz). Firefox y Safari funcionan sin voz (se usa el aporte escrito).
-- Opcional: **Python 3** o **VS Code + Live Server** para servir la app.
-- Opcional: una **API key de Gemini** (gratuita en Google AI Studio) u **Ollama** instalado para usar un LLM real.
+- **Google Chrome** o **Microsoft Edge** para probar la reunión con reconocimiento de voz del navegador. El asistente usa `MediaRecorder` y permite escribir si el navegador no puede grabar.
+- **Node.js 22 o superior** para el servidor local y las pruebas.
+- Una **API key de Gemini** para el asistente. Puedes gestionarla en [Google AI Studio](https://aistudio.google.com/apikey).
 
 ## Opción 1 – Doble clic (la más rápida)
 
@@ -17,20 +17,22 @@
 
 ## Opción 2 – Servidor local (recomendada)
 
-**Con Python:**
-
 ```bash
-cd orbita-pwa
-python -m http.server 8000
+cd Orbita-pwa
+npm start
 ```
 
-Abre <http://localhost:8000>.
+Abre <http://localhost:8000>. Puedes usar las pantallas de la reunión y la demo guiada sin configurar una clave.
 
-**Con VS Code:**
+## Probar el asistente de voz con Gemini
 
-1. Instala la extensión **Live Server** (Ritwick Dey).
-2. Abre la carpeta `orbita-pwa`.
-3. Clic derecho en `index.html` → **Open with Live Server**.
+1. Copia `.env.example` a `.env` si todavía no tienes ese archivo. Configura `GEMINI_API_KEY` en `.env`. Git ignora ese archivo.
+2. Ejecuta `npm start` desde `Orbita-pwa` y abre <http://localhost:8000>.
+3. Pulsa **Comenzar**, entra a **Salas → Asistente de voz** y elige un tema si quieres orientar la conversación.
+4. Pulsa **Grabar mensaje**, permite el micrófono y pulsa **Detener grabación** cuando termines. Revisa la transcripción antes de enviarla. La grabación admite hasta 45 segundos.
+5. Pulsa **Enviar mensaje**. Lee la respuesta y pulsa **Escuchar última respuesta** para reproducir el audio que genera Gemini.
+
+Si cambias `.env`, reinicia el servidor. El asistente requiere conexión con Gemini y se sirve desde el backend local. Puedes escribir si el micrófono no está disponible.
 
 ## Instalar como app (PWA)
 
@@ -38,7 +40,7 @@ Abre <http://localhost:8000>.
 - **Android:** menú ⋮ → *Agregar a la pantalla principal*.
 - **iPhone (Safari):** botón Compartir → *Agregar a inicio*.
 
-Para probar en el celular dentro de la misma red Wi-Fi: `python -m http.server 8000 --bind 0.0.0.0` y entra a `http://<IP-de-tu-laptop>:8000`. El micrófono en el celular requiere HTTPS (por ejemplo, publicando en GitHub Pages).
+Para probar la PWA de reuniones en el celular, usa la versión estática por HTTPS. El asistente de voz requiere su propio servidor Node.js. El servidor de desarrollo escucha en `127.0.0.1` y se prueba desde el equipo donde se ejecuta.
 
 ## Probar el multiusuario
 
@@ -59,10 +61,10 @@ Para probar en el celular dentro de la misma red Wi-Fi: `python -m http.server 8
 
 ## Ejecutar las pruebas automáticas
 
-Requiere Node.js 18 o superior (no hay que instalar nada más):
+Con Node.js 22 o superior, ejecuta las pruebas sin instalar dependencias.
 
 ```bash
-node tests/run.js
+npm test
 ```
 
 ## Usar un LLM real
@@ -88,4 +90,4 @@ Abre `http://localhost:8000` en Chrome o Edge y entra con **Comenzar**. En **Pre
 
 1. Sube el repositorio a GitHub.
 2. *Settings → Pages → Branch: main / root → Save*.
-3. La app queda en `https://<usuario>.github.io/orbita-pwa/` con HTTPS (voz y PWA funcionan en el celular).
+3. La PWA de reuniones queda disponible por HTTPS. GitHub Pages sirve los archivos estáticos. Para el asistente de voz, ejecuta el servidor con la opción 2.

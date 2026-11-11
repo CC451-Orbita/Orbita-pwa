@@ -161,6 +161,14 @@ body.sin-subtitulos .subtitulos { display: none; }
 .revision-aportes p { margin: 2px 0 0; }
 .grafico svg { width: 100%; height: auto; }
 
+.asistente-conversacion { padding: 0; margin: 0; list-style: none; }
+.asistente-conversacion li { background: var(--tarjeta); border-radius: var(--radio); padding: 10px 14px; margin: 8px 0; overflow-wrap: anywhere; }
+.asistente-conversacion li p { margin: 4px 0 0; white-space: pre-wrap; }
+.asistente-conversacion .asistente-propio { margin-inline-start: 14px; }
+#asistente-grabar[aria-pressed="true"] { border-color: var(--peligro); }
+#asistente-audio { width: 100%; margin-top: 8px; }
+#asistente-estado { min-height: 1.4em; }
+
 /* Simulación guiada y toast */
 .guia { position: fixed; left: 0; right: 0; top: 0; z-index: 50; display: flex; justify-content: center; pointer-events: none; }
 .guia-caja { display: flex; align-items: center; gap: 8px; max-width: 560px; width: 100%; margin: 4px 8px; background: rgba(79,199,194,.96); color: #062221; font-weight: 600; font-size: 14px; padding: 8px 10px; border-radius: 12px; box-shadow: 0 6px 20px rgba(0,0,0,.4); }

@@ -2,7 +2,7 @@
 
 > *Que todas las voces encuentren su órbita.*
 
-![Pruebas](https://img.shields.io/badge/pruebas-22%20correctas-4FC7C2) ![Versión](https://img.shields.io/badge/versión-0.7.0%20(PC03)-8C7CF0) ![Licencia](https://img.shields.io/badge/licencia-MIT-F5B94A)
+![Versión](https://img.shields.io/badge/versión-0.7.0%20(PC03)-8C7CF0) ![Licencia](https://img.shields.io/badge/licencia-MIT-F5B94A)
 
 **Órbita** es una aplicación web progresiva (PWA) que equilibra la participación en reuniones. Cada participante es un **planeta**: su distancia al sol muestra cuánto ha participado, sin números ni rankings. Antes de que se cierre un tema, Órbita abre una **ventana de órbita**: invita **en privado** a quienes no han aportado, con una pregunta concreta generada por un LLM, y les deja elegir entre **hablar, escribir o pasar**.
 
@@ -29,22 +29,32 @@ Proyecto del curso **CC451 – Interacción Humano Computador** (UNI, Facultad d
 
 ## 🚀 Inicio rápido
 
+Con Node.js 22 o superior, ejecuta estos comandos.
+
 ```bash
-git clone https://github.com/USUARIO/orbita-pwa.git
-cd orbita-pwa
-python3 -m http.server 8000      # o la extensión Live Server de VS Code
+git clone https://github.com/CC451-Orbita/Orbita-pwa.git
+cd Orbita-pwa
+npm start
 ```
 
-Abre <http://localhost:8000> y pulsa **«Ver simulación guiada»** (o entra a `http://localhost:8000/?demo=1`). La demo usa un perfil temporal, voz simulada y el proveedor simulado. Para probar el micrófono y un LLM real, entra con **Comenzar**.
-Guía completa: **[docs/INSTALACION.md](docs/INSTALACION.md)**.
+Abre <http://localhost:8000> y pulsa **Ver simulación guiada**. La demo usa un perfil temporal y simula la voz y las intervenciones de la reunión.
+
+### Asistente de voz con Gemini
+
+1. Crea `.env` a partir de `.env.example` si todavía no existe. Configura `GEMINI_API_KEY` en ese archivo y ejecuta `npm start`. Si Órbita ya estaba abierta, reinicia el servidor.
+2. Entra con **Comenzar** y abre **Salas → Asistente de voz**. Puedes elegir un tema para orientar la conversación.
+3. Pulsa **Grabar mensaje**, habla y detén la grabación. Revisa y edita la transcripción antes de enviarla. También puedes escribir directamente.
+4. Pulsa **Enviar mensaje**. Cuando llegue la respuesta, pulsa **Escuchar última respuesta** para reproducirla.
+
+La [guía de instalación](docs/INSTALACION.md) describe la configuración y las opciones de prueba.
 
 ## 🧪 Pruebas
 
 ```bash
-node tests/run.js        # o: npm test
+npm test
 ```
 
-22 pruebas automáticas sin dependencias cubren la capa LLM, el perfil persistente, la preparación, el índice de equilibrio y los datos simulados. El flujo de GitHub Actions las ejecuta en cada *push* (`.github/workflows/pruebas.yml`).
+Las pruebas cubren la capa LLM, el perfil, la preparación, el índice de equilibrio, los datos simulados y los endpoints del asistente. Las pruebas del backend usan un proveedor de prueba y funcionan sin credenciales. GitHub Actions ejecuta la suite en cada *push* (`.github/workflows/pruebas.yml`).
 
 ## 🧭 Flujo de la aplicación (12 pantallas)
 
@@ -69,12 +79,13 @@ Diagramas C4 en **[docs/ARQUITECTURA.md](docs/ARQUITECTURA.md)**.
 
 ```
 orbita-pwa/
-├── index.html              # 12 pantallas + 3 modales
+├── index.html              # pantallas y modales
 ├── manifest.webmanifest    # PWA
 ├── sw.js                   # service worker (offline)
 ├── css/styles.css          # diseño visual y accesibilidad
 ├── js/
 │   ├── app.js              # controlador de pantallas
+│   ├── asistente.js        # grabación, conversación y reproducción
 │   ├── prep.js             # preparación de la participación (NUEVO)
 │   ├── orbits.js           # interfaz orbital (SVG)
 │   ├── room.js             # motor de reunión + multiusuario
@@ -82,7 +93,8 @@ orbita-pwa/
 │   ├── voice.js            # voz (STT, TTS, comandos)
 │   ├── profile.js          # perfil persistente
 │   └── demo.js             # simulación guiada
-├── tests/run.js            # 22 pruebas automáticas
+├── backend/                # servidor HTTP y adaptador de Gemini
+├── tests/                  # pruebas de la lógica y de la API
 ├── data/                   # datos simulados (JSON + simulated.js)
 ├── icons/                  # íconos PWA
 └── docs/                   # arquitectura, instalación, diagramas, capturas
@@ -92,7 +104,8 @@ orbita-pwa/
 
 - No se guarda audio; la transcripción se borra al salir salvo que el usuario la descargue.
 - Las ideas preparadas se guardan en el navegador y «Hazlo corto» las procesa en el dispositivo. Al compartir una idea, se incorpora a la reunión y puede formar parte del contexto enviado al proveedor seleccionado.
-- La clave de Gemini se mantiene en memoria durante el uso de la pestaña.
+- En el asistente de voz, la clave de Gemini se configura en el servidor. Gemini procesa la grabación al detenerla, los últimos turnos al enviar un mensaje y la respuesta al pedir su lectura. Órbita conserva la conversación en memoria hasta salir del asistente.
+- La clave opcional configurada en **Ajustes** para el proveedor de la reunión se mantiene en memoria durante el uso de la pestaña.
 - **Ajustes → Borrar todos mis datos** elimina todo.
 
 ## 👥 Equipo
