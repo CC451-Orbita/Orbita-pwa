@@ -1,7 +1,7 @@
 /* Service worker de Órbita: caché "app shell" para funcionar sin conexión (RNF-01). */
-const CACHE = 'orbita-v10';
+const CACHE = 'orbita-v11';
 const ARCHIVOS = ['./', './index.html', './css/styles.css', './manifest.webmanifest',
-  './js/app.js', './js/asistente.js', './js/llm.js', './js/markdown.js', './js/voice.js', './js/orbits.js', './js/room.js', './js/profile.js', './js/demo.js', './js/prep.js',
+  './js/app.js', './js/asistente.js', './js/llm.js', './js/prompts-llm.js', './js/markdown.js', './js/voice.js', './js/orbits.js', './js/room.js', './js/profile.js', './js/demo.js', './js/prep.js',
   './vendor/markdown-it/markdown-it.umd.min.js',
   './data/simulated.js', './icons/icon.svg', './icons/icon-192.png', './icons/icon-512.png'];
 

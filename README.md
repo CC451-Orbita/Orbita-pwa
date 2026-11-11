@@ -104,8 +104,8 @@ orbita-pwa/
 
 - No se guarda audio; la transcripción se borra al salir salvo que el usuario la descargue.
 - Las ideas preparadas se guardan en el navegador y «Hazlo corto» las procesa en el dispositivo. Al compartir una idea, se incorpora a la reunión y puede formar parte del contexto enviado al proveedor seleccionado.
-- En el asistente de voz, la clave de Gemini se configura en el servidor. Gemini procesa la grabación al detenerla, los últimos turnos al enviar un mensaje y la respuesta al pedir su lectura. Órbita conserva la conversación en memoria hasta salir del asistente.
-- La clave opcional configurada en **Ajustes** para el proveedor de la reunión se mantiene en memoria durante el uso de la pestaña.
+- El asistente de voz y las funciones de reunión usan la misma clave de Gemini en el servidor. En **Ajustes** puedes comprobar si Gemini está habilitado y probarlo como proveedor de reunión.
+- En el asistente, Gemini procesa la grabación al detenerla, los últimos turnos al enviar un mensaje y la respuesta al pedir su lectura. Órbita conserva la conversación en memoria hasta salir del asistente. Si eliges Gemini para la reunión, el servidor le envía el texto necesario para generar invitaciones, sugerencias y resúmenes.
 - **Ajustes → Borrar todos mis datos** elimina todo.
 
 ## 👥 Equipo

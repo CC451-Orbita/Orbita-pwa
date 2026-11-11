@@ -103,3 +103,5 @@ El servidor Node.js sirve la PWA y expone la API local del asistente. `js/asiste
 | `POST /api/asistente/voz` | Devuelve la respuesta hablada en formato WAV |
 
 El asistente conserva los turnos en memoria en el navegador y descarta la conversación al salir. El backend opera sin base de datos y la API queda fuera del caché de la PWA.
+
+La reunión usa la misma credencial del servidor. `GET /api/reunion/estado` informa si Gemini está habilitado por configuración. `POST /api/reunion/generar` recibe el tipo de tarea y los campos necesarios para construir la solicitud. La preferencia de proveedor de la reunión se guarda en el perfil local.

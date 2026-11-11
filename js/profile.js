@@ -17,7 +17,7 @@
     respuestas: { hablar: 0, escribir: 0, paso: 0, sinRespuesta: 0 },
     emociones: [],                     // {fecha, momento: 'inicio'|'fin', valor, origen: 'declarada'|'inferida'}
     reuniones: 0,
-    llm: { proveedor: 'simulado', apiKey: '' },
+    llm: { proveedor: 'simulado' },
     preparaciones: {}                  // { codigoSala: { temaId: { nota, invitar, ensayos, duracionSeg, usada } } }
   };
 
@@ -31,7 +31,10 @@
       const raw = localStorage.getItem(CLAVE);
       cache = raw ? Object.assign(clonar(PERFIL_INICIAL), JSON.parse(raw)) : clonar(PERFIL_INICIAL);
       cache.llm = { ...PERFIL_INICIAL.llm, ...cache.llm };
-      if (cache.llm.apiKey) guardar();
+      if (Object.hasOwn(cache.llm, 'apiKey')) {
+        delete cache.llm.apiKey;
+        guardar();
+      }
     } catch (e) {
       cache = clonar(PERFIL_INICIAL); // modo privado: el perfil vive solo en memoria
     }
@@ -40,8 +43,7 @@
 
   function guardar() {
     if (temporal) return;
-    const { apiKey, ...llm } = cache.llm;
-    try { localStorage.setItem(CLAVE, JSON.stringify({ ...cache, llm })); } catch (e) { /* sin almacenamiento: seguimos en memoria */ }
+    try { localStorage.setItem(CLAVE, JSON.stringify(cache)); } catch (e) { /* sin almacenamiento: seguimos en memoria */ }
   }
 
   window.Perfil = {

@@ -4,6 +4,7 @@ const http = require('node:http');
 const path = require('node:path');
 const fs = require('node:fs/promises');
 const { crearGemini, ErrorServicio } = require('./gemini.cjs');
+const { construir } = require('../js/prompts-llm.js');
 
 const RAIZ = path.resolve(__dirname, '..');
 const LIMITE_AUDIO = 2 * 1024 * 1024;
@@ -103,15 +104,15 @@ function crearServidor({ proveedor = crearGemini() } = {}) {
       if ((req.headers.origin && req.headers.origin !== `http://${host}`) || req.headers['sec-fetch-site'] === 'cross-site') {
         return json(res, 403, { error: 'La solicitud debe provenir de Órbita.' });
       }
-      if (ruta === '/api/asistente/estado' && req.method === 'GET') {
+      if (['/api/asistente/estado', '/api/reunion/estado'].includes(ruta) && req.method === 'GET') {
         return json(res, 200, { configurado: proveedor.configurado });
       }
-      if (!['/api/asistente/transcribir', '/api/asistente/responder', '/api/asistente/voz'].includes(ruta)) {
-        return json(res, 404, { error: 'Ruta del asistente no encontrada.' });
+      if (!['/api/asistente/transcribir', '/api/asistente/responder', '/api/asistente/voz', '/api/reunion/generar'].includes(ruta)) {
+        return json(res, 404, { error: 'Ruta de la API no encontrada.' });
       }
       if (req.method !== 'POST') return json(res, 405, { error: 'Método no permitido.' });
       if (!proveedor.configurado) return json(res, 503, { error: 'Configura la clave de Gemini en el servidor y reinícialo.' });
-      if (solicitudes >= 3) return json(res, 429, { error: 'El asistente está ocupado. Intenta de nuevo en unos segundos.' });
+      if (solicitudes >= 3) return json(res, 429, { error: 'El servicio de IA está ocupado. Intenta de nuevo en unos segundos.' });
 
       solicitudes++;
       const control = new AbortController();
@@ -126,6 +127,12 @@ function crearServidor({ proveedor = crearGemini() } = {}) {
           return json(res, 200, { texto });
         }
         const datos = await leerJson(req);
+        if (ruta === '/api/reunion/generar') {
+          const prompt = construir(datos.tarea, datos.datos);
+          if (!prompt) throw new ErrorServicio(400, 'La tarea de reunión o sus datos no son válidos.');
+          const texto = await proveedor.generarReunion(prompt, control.signal);
+          return json(res, 200, { texto });
+        }
         if (ruta.endsWith('/responder')) {
           const texto = await proveedor.responder(validarConversacion(datos), control.signal);
           return json(res, 200, { texto });

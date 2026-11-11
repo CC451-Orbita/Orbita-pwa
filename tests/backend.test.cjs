@@ -98,9 +98,39 @@ test('la app estática funciona y el asistente informa si falta configuración',
   assert.equal((await fetch(base + '/backend/server.cjs')).status, 404);
   const estado = await fetch(base + '/api/asistente/estado');
   assert.deepEqual(await estado.json(), { configurado: false });
+  const estadoReunion = await fetch(base + '/api/reunion/estado');
+  assert.deepEqual(await estadoReunion.json(), { configurado: false });
   const respuesta = await post(base, 'responder', { mensaje: 'Hola' });
   assert.equal(respuesta.status, 503);
   assert.match((await respuesta.json()).error, /clave de Gemini en el servidor/);
+});
+
+test('la reunión usa la clave del servidor y limita las tareas y los datos que envía a Gemini', async t => {
+  const llamadas = [];
+  const proveedor = crearGemini({ clave: 'clave-ficticia-del-servidor', async peticion(url, opciones) {
+    assert.match(url, /:generateContent$/);
+    assert.equal(opciones.headers['x-goog-api-key'], 'clave-ficticia-del-servidor');
+    llamadas.push(JSON.parse(opciones.body));
+    return Response.json({ candidates: [{ content: { parts: [{ text: '## Decisiones\n\n- Probar en Safari.' }] } }] });
+  } });
+  const base = await iniciar(t, proveedor);
+  const estado = await fetch(base + '/api/reunion/estado');
+  assert.deepEqual(await estado.json(), { configurado: true });
+  const enviar = datos => fetch(base + '/api/reunion/generar', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(datos)
+  });
+  assert.equal((await enviar({ tarea: 'otraTarea', datos: { texto: 'Texto' } })).status, 400);
+  assert.equal((await enviar({ tarea: 'resumen', datos: { transcripcion: {} } })).status, 400);
+  const resumen = await enviar({
+    tarea: 'resumen', datos: { transcripcion: 'Ana: Quedamos en probar en Safari.', revision: 'Detalle privado' },
+    apiKey: 'clave-ficticia-del-participante', sistema: 'Instrucciones personalizadas'
+  });
+  assert.equal(resumen.status, 200);
+  assert.deepEqual(await resumen.json(), { texto: '## Decisiones\n\n- Probar en Safari.' });
+  assert.equal(llamadas.length, 1);
+  assert.match(llamadas[0].contents[0].parts[0].text, /Ana: Quedamos en probar en Safari/);
+  assert.match(llamadas[0].systemInstruction.parts[0].text, /moderador amable/);
+  assert.doesNotMatch(JSON.stringify(llamadas[0]), /Detalle privado|clave-ficticia|Instrucciones personalizadas/);
 });
 
 test('rechaza un origen externo, un formato incorrecto y datos fuera del límite', async t => {

@@ -42,7 +42,6 @@
     datosResumen = null;
     $('#in-aporte').value = '';
     $('#chk-anonimo').checked = false;
-    $('#in-apikey').value = '';
     $('#resultado-llm').textContent = '';
     $('#toast').hidden = true;
     aplicarAccesibilidad();
@@ -474,16 +473,30 @@
   $('#btn-volver-salas').addEventListener('click', () => { historialNav.length = 0; ir('p-salas'); });
 
   /* ---------- P10 Ajustes ---------- */
-  function pintarAjustes() {
-    const { llm } = window.Perfil.obtener();
-    $('#sel-proveedor').value = llm.proveedor; $('#in-apikey').value = llm.apiKey;
-    $('#campo-key').hidden = llm.proveedor !== 'gemini';
+  async function pintarAjustes() {
+    const selector = $('#sel-proveedor');
+    const gemini = selector.querySelector('option[value="gemini"]');
+    const estadoGemini = $('#estado-gemini');
+    selector.value = window.Perfil.obtener().llm.proveedor;
+    gemini.disabled = true;
+    estadoGemini.textContent = 'Comprobando si Gemini está habilitado…';
+    try {
+      const respuesta = await fetch('api/reunion/estado', { cache: 'no-store', signal: AbortSignal.timeout(5000) });
+      if (!respuesta.ok) throw new Error();
+      const { configurado } = await respuesta.json();
+      if (typeof configurado !== 'boolean') throw new Error();
+      gemini.disabled = !configurado;
+      estadoGemini.textContent = configurado
+        ? 'Gemini está habilitado en el servidor. Si lo eliges, procesa el texto de la reunión necesario para generar respuestas.'
+        : 'Gemini requiere una clave configurada en el servidor. Consulta con quien administra Órbita.';
+    } catch {
+      estadoGemini.textContent = 'Gemini requiere el servidor de Órbita. Para iniciarlo localmente, usa npm start.';
+    }
   }
   $('#sel-proveedor').addEventListener('change', e => {
-    const p = window.Perfil.obtener(); p.llm.proveedor = e.target.value; window.Perfil.actualizar({ llm: p.llm }); pintarAjustes();
+    window.Perfil.actualizar({ llm: { proveedor: e.target.value } });
     $('#resultado-llm').textContent = '';
   });
-  $('#in-apikey').addEventListener('change', e => { const p = window.Perfil.obtener(); p.llm.apiKey = e.target.value.trim(); window.Perfil.actualizar({ llm: p.llm }); });
   $('#btn-probar-llm').addEventListener('click', async () => {
     const p = window.Perfil.obtener();
     const solicitado = p.llm.proveedor;

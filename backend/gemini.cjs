@@ -1,5 +1,7 @@
 'use strict';
 
+const { sistema: SISTEMA_REUNION } = require('../js/prompts-llm.js');
+
 const API = 'https://generativelanguage.googleapis.com/v1beta';
 const INSTRUCCIONES = [
   'Eres el asistente de preparación de Órbita. Ayuda a formular aportes y preguntas para reuniones.',
@@ -66,6 +68,12 @@ function crearGemini({
 
   return {
     configurado: Boolean(clave),
+
+    async generarReunion(prompt, signal) {
+      const texto = await generar([{ role: 'user', parts: [{ text: prompt }] }], SISTEMA_REUNION,
+        { temperature: 0.4, maxOutputTokens: 300 }, signal);
+      return texto.replaceAll(clave, '[clave omitida]');
+    },
 
     async transcribir(audio, mimeType, signal) {
       const resultado = await generar([{ role: 'user', parts: [

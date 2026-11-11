@@ -242,14 +242,13 @@
     <section class="pantalla" id="p-ajustes" data-titulo="Ajustes">
       <h2>Ajustes</h2>
       <fieldset class="campo">
-        <legend>Proveedor de IA (capa de abstracción)</legend>
-        <select id="sel-proveedor">
-          <option value="simulado">Simulado (sin red) – recomendado para la demo</option>
-          <option value="gemini">Gemini (API remota)</option>
-          <option value="ollama">Ollama (LLM local en esta laptop)</option>
+        <legend>IA para la reunión</legend>
+        <select id="sel-proveedor" aria-describedby="estado-gemini">
+          <option value="simulado">Simulado (sin red)</option>
+          <option value="gemini" disabled>Gemini (API remota)</option>
+          <option value="ollama">Ollama (requiere un servidor local)</option>
         </select>
-        <label class="campo" id="campo-key">API key de Gemini<input id="in-apikey" type="password" placeholder="AIza…" autocomplete="off"></label>
-        <p class="sutil">La clave de Gemini se mantiene en memoria hasta recargar o cerrar la pestaña. Si el proveedor falla, Órbita muestra una respuesta simulada.</p>
+        <p class="sutil" id="estado-gemini" role="status"></p>
       </fieldset>
       <button class="btn secundario" id="btn-probar-llm">Probar proveedor</button>
       <p class="sutil" id="resultado-llm" role="status"></p>
@@ -315,6 +314,7 @@
 <script src="js/profile.js"></script>
 <script src="vendor/markdown-it/markdown-it.umd.min.js"></script>
 <script src="js/markdown.js"></script>
+<script src="js/prompts-llm.js"></script>
 <script src="js/llm.js"></script>
 <script src="js/voice.js"></script>
 <script src="js/orbits.js"></script>

@@ -17,10 +17,10 @@ function nuevoEntorno(almacen = {}) {
     setItem: (k, v) => { almacen[k] = String(v); },
     removeItem: k => { delete almacen[k]; }
   };
-  const ctx = { console, setTimeout, clearTimeout, localStorage, JSON, Math, Date, Promise };
+  const ctx = { console, setTimeout, clearTimeout, localStorage, JSON, Math, Date, Promise, AbortSignal };
   ctx.window = ctx;
   vm.createContext(ctx);
-  for (const f of ['data/simulated.js', 'js/profile.js', 'js/llm.js', 'js/room.js', 'js/prep.js']) {
+  for (const f of ['data/simulated.js', 'js/profile.js', 'js/prompts-llm.js', 'js/llm.js', 'js/room.js', 'js/prep.js']) {
     vm.runInContext(fs.readFileSync(path.join(RAIZ, f), 'utf8'), ctx, { filename: f });
   }
   return { w: ctx, almacen };
@@ -45,19 +45,35 @@ function verdadero(c, msg) { if (!c) throw new Error(msg || 'condición falsa');
     const t = await w.LLM.generar('invitacion', { tema: 'Presupuesto', preguntaBase: '¿Ves algún riesgo?' });
     igual(t, '¿Ves algún riesgo?');
   });
-  await prueba('Fallback: Gemini sin API key → proveedor simulado', async () => {
+  await prueba('Si falta la clave en el servidor, la reunión avisa y usa el modo simulado', async () => {
     const { w } = nuevoEntorno();
-    w.Perfil.actualizar({ llm: { proveedor: 'gemini', apiKey: '' } });
+    w.Perfil.actualizar({ llm: { proveedor: 'gemini' } });
+    w.fetch = () => Response.json({ error: 'Configura la clave de Gemini en el servidor y reinícialo.' }, { status: 503 });
     const r = await w.LLM.generarResultado('invitacion', { tema: 'X', preguntaBase: 'Pregunta base' });
     igual(r.texto, 'Pregunta base'); igual(r.proveedor, 'simulado'); igual(r.respaldo, true);
-    verdadero(r.aviso.includes('Falta la clave de Gemini') && r.aviso.includes('Ajustes'));
+    verdadero(r.aviso.includes('clave de Gemini en el servidor') && r.aviso.includes('modo simulado'));
+  });
+  await prueba('Gemini pide el resumen al backend con la transcripción como único dato', async () => {
+    const { w } = nuevoEntorno();
+    w.Perfil.actualizar({ llm: { proveedor: 'gemini' } });
+    let solicitud;
+    w.fetch = (ruta, opciones) => {
+      solicitud = { ruta, ...opciones };
+      return Response.json({ texto: '## Decisiones\n\n- Probar en Safari.' });
+    };
+    const r = await w.LLM.generarResultado('resumen', {
+      transcripcion: 'Ana: Quedamos en probar en Safari.', revision: ['Detalle de perfil']
+    });
+    igual(solicitud.ruta, 'api/reunion/generar');
+    igual(solicitud.headers['x-goog-api-key'], undefined);
+    igual(solicitud.body, JSON.stringify({ tarea: 'resumen', datos: { transcripcion: 'Ana: Quedamos en probar en Safari.' } }));
+    igual(r.texto, '## Decisiones\n\n- Probar en Safari.'); igual(r.proveedor, 'gemini');
   });
   await prueba('"Hazlo corto" conserva la nota en el dispositivo con Gemini activo', async () => {
     const { w } = nuevoEntorno();
-    w.Perfil.actualizar({ llm: { proveedor: 'gemini', apiKey: 'clave-de-prueba' } });
+    w.Perfil.actualizar({ llm: { proveedor: 'gemini' } });
     let peticiones = 0;
     w.fetch = () => { peticiones++; throw new Error('Petición inesperada'); };
-    w.AbortSignal = AbortSignal;
     const r = await w.LLM.generar('pulirNota', { texto: 'Eh, bueno, o sea, yo creo que deberíamos reservar una parte del presupuesto para hacer pruebas de accesibilidad con usuarios reales porque si no, tipo, después salen errores' });
     igual(peticiones, 0);
     verdadero(!/\b(eh|bueno|o sea|tipo)\b/i.test(r), 'quedaron muletillas: ' + r);
@@ -108,13 +124,12 @@ function verdadero(c, msg) { if (!c) throw new Error(msg || 'condición falsa');
     igual(w.Perfil.obtener().nombre, 'Personal');
     igual(w.Preparacion.notaDe('ORB-4821', 'T1'), 'Nota personal');
   });
-  await prueba('Una clave de Gemini existente se conserva solo en memoria de la pestaña', () => {
+  await prueba('El perfil elimina claves antiguas de Gemini y conserva el proveedor elegido', () => {
     const clavePerfil = 'orbita.perfil.v1';
     const almacen = { [clavePerfil]: JSON.stringify({ nombre: 'Ana', llm: { proveedor: 'gemini', apiKey: 'clave-de-prueba' } }) };
     const { w } = nuevoEntorno(almacen);
-    igual(w.Perfil.obtener().llm.apiKey, 'clave-de-prueba');
+    igual(w.Perfil.obtener().llm.apiKey, undefined);
     igual(JSON.parse(almacen[clavePerfil]).llm.apiKey, undefined);
-    igual(nuevoEntorno(almacen).w.Perfil.obtener().llm.apiKey, '');
     igual(nuevoEntorno(almacen).w.Perfil.obtener().llm.proveedor, 'gemini');
   });
 

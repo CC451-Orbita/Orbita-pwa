@@ -5,7 +5,7 @@
 - Laptop con Windows, macOS o Linux, o un celular Android/iOS.
 - **Google Chrome** o **Microsoft Edge** para probar la reunión con reconocimiento de voz del navegador. El asistente usa `MediaRecorder` y permite escribir si el navegador no puede grabar.
 - **Node.js 22 o superior** para el servidor local y las pruebas.
-- Una **API key de Gemini** para el asistente. Puedes gestionarla en [Google AI Studio](https://aistudio.google.com/apikey).
+- Una **API key de Gemini** para habilitar el asistente y el proveedor Gemini de la reunión. Quien administra el servidor puede gestionarla en [Google AI Studio](https://aistudio.google.com/apikey).
 
 ## Opción 1 – Doble clic (la más rápida)
 
@@ -69,7 +69,7 @@ npm test
 
 ## Usar un LLM real
 
-**Gemini (remoto).** Entra con **Comenzar**, abre **Ajustes**, selecciona **Gemini**, pega tu clave y pulsa **Probar proveedor**. La prueba envía un ejemplo ficticio y muestra el proveedor de la respuesta. La clave queda en memoria de esa pestaña y se vuelve a ingresar al recargar.
+**Gemini (remoto).** Quien administra el servidor configura `GEMINI_API_KEY` en `.env` e inicia Órbita con `npm start`. Luego, en **Ajustes → IA para la reunión**, elige **Gemini** y pulsa **Probar proveedor**. La prueba envía un ejemplo ficticio y muestra el proveedor de la respuesta. Si el servidor tiene la clave configurada, Gemini seguirá habilitado al recargar la página.
 
 **Ollama (local):**
 

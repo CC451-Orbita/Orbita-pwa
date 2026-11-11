@@ -5,11 +5,7 @@
    se usa el proveedor simulado (degradación elegante, RNF-09).
    ============================================================ */
 (function () {
-  const SISTEMA_BASE =
-    'Eres el moderador amable de Órbita, una app que equilibra la participación en reuniones. ' +
-    'Escribe en español, frases cortas (máximo 25 palabras), tono cálido y nunca punitivo. ' +
-    'Nunca menciones que alguien estuvo callado ni compares a las personas. ' +
-    'Usa texto plano salvo cuando se solicite Markdown para un resumen.';
+  const Prompts = window.PromptsLLM;
 
   /* ---------- Proveedor simulado (sin red, para demo y pruebas) ---------- */
   const Simulado = {
@@ -39,25 +35,25 @@
   /* ---------- Proveedor Gemini (API remota) ---------- */
   const Gemini = {
     nombre: 'Gemini (API remota)',
-    modelo: 'gemini-3.5-flash-lite',
-    async generar({ tarea, datos, apiKey }) {
-      if (!apiKey?.trim()) {
-        throw Object.assign(new Error('Falta la clave de Gemini'), { code: 'claveGeminiAusente' });
+    async generar({ tarea, datos }) {
+      const mensajeConexion = 'El servidor de Órbita no está disponible. Inicia la app con npm start.';
+      let res;
+      try {
+        res = await fetch('api/reunion/generar', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          signal: AbortSignal.timeout(27000),
+          body: JSON.stringify({ tarea, datos: Prompts.seleccionarDatos(tarea, datos) })
+        });
+      } catch (error) {
+        const mensaje = error.name === 'TimeoutError' ? 'El servidor tardó demasiado. Intenta de nuevo.' : mensajeConexion;
+        throw Object.assign(new Error(mensaje), { code: 'errorGemini' });
       }
-      const url = `https://generativelanguage.googleapis.com/v1beta/models/${this.modelo}:generateContent`;
-      const res = await fetch(url, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'x-goog-api-key': apiKey },
-        signal: AbortSignal.timeout(12000),
-        body: JSON.stringify({
-          systemInstruction: { parts: [{ text: SISTEMA_BASE }] },
-          contents: [{ role: 'user', parts: [{ text: construirPrompt(tarea, datos) }] }],
-          generationConfig: { temperature: 0.4, maxOutputTokens: 300 }
-        })
-      });
-      if (!res.ok) throw new Error('Gemini respondió ' + res.status);
-      const j = await res.json();
-      return j.candidates?.[0]?.content?.parts?.map(p => p.text).join('') || '';
+      const respuesta = await res.json().catch(() => null);
+      if (!res.ok || typeof respuesta?.texto !== 'string') {
+        throw Object.assign(new Error(respuesta?.error || mensajeConexion), { code: 'errorGemini' });
+      }
+      return respuesta.texto;
     }
   };
 
@@ -70,7 +66,7 @@
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         signal: AbortSignal.timeout(30000),
-        body: JSON.stringify({ model: this.modelo, system: SISTEMA_BASE, prompt: construirPrompt(tarea, datos), stream: false })
+        body: JSON.stringify({ model: this.modelo, system: Prompts.sistema, prompt: Prompts.construir(tarea, datos), stream: false })
       });
       if (!res.ok) throw new Error('Ollama respondió ' + res.status);
       return (await res.json()).response || '';
@@ -94,29 +90,6 @@
     if (t && !/[.!?…]$/.test(t)) t += '.';
     if (t) t = t.charAt(0).toUpperCase() + t.slice(1);
     return t;
-  }
-
-  function construirPrompt(tarea, d) {
-    switch (tarea) {
-      case 'invitacion':
-        return `Tema en discusión: "${d.tema}". Intervenciones que verá ${d.nombre}:\n${d.contexto || 'No hay intervenciones disponibles.'}\n` +
-               'Devuelve una sola pregunta abierta y breve, sin saludo. Si aludes a una propuesta, nombra el dato o la acción concreta. ' +
-               'Evita referencias vagas como «esta opción» o «este plan». No inventes hechos ni atribuciones. ' +
-               `Si no hay contexto suficiente, formula la pregunta sobre el tema. Pregunta de referencia: ${d.preguntaBase || d.tema}`;
-      case 'sugerenciaDominante':
-        return `${d.nombre} ha hablado el ${d.porcentaje}% del tiempo. Escribe una sugerencia privada y amable para que ceda la palabra, usando la metáfora de órbitas.`;
-      case 'resumirAporte':
-        return `Resume en una sola línea (máx. 20 palabras) este aporte escrito, sin cambiar su sentido:\n"${d.texto}"`;
-      case 'resumen':
-        return `Transcripción de la reunión:\n${d.transcripcion}\n\n` +
-               'Resume en Markdown con los encabezados exactos «## Decisiones» y «## Temas abiertos». ' +
-               'Usa listas con guiones e incluye solo decisiones y pendientes respaldados por la transcripción. ' +
-               'Escribe «Ninguno» si una sección está vacía.';
-      case 'guiaPreparacion':
-        return `Tema de la agenda: "${d.tema}". Escribe UNA pregunta guía corta que ayude a una persona tímida a preparar su aporte antes de la reunión.`;
-      default:
-        return d.texto || '';
-    }
   }
 
   /* ---------- Validador de tono (RNF-08) ---------- */
@@ -143,7 +116,7 @@
       const cfg = window.Perfil.obtener().llm;
       const proveedor = Object.hasOwn(PROVEEDORES, cfg.proveedor) ? cfg.proveedor : 'simulado';
       try {
-        const respuesta = (await PROVEEDORES[proveedor].generar({ tarea, datos, apiKey: cfg.apiKey })).trim();
+        const respuesta = (await PROVEEDORES[proveedor].generar({ tarea, datos })).trim();
         const texto = proveedor !== 'simulado' && tarea !== 'resumen'
           ? window.Markdown.textoPlano(respuesta)
           : respuesta;
@@ -151,8 +124,8 @@
         if (tarea === 'invitacion' && REFERENCIA_VAGA.test(texto)) throw new Error('Pregunta con referencia vaga');
         return { texto, proveedor, respaldo: false };
       } catch (e) {
-        const aviso = e.code === 'claveGeminiAusente'
-          ? 'Falta la clave de Gemini. Vuelve a ingresarla en Ajustes. Mientras tanto, se usa el modo simulado.'
+        const aviso = e.code === 'errorGemini'
+          ? e.message + ' Se usó el modo simulado.'
           : '';
         return { texto: await Simulado.generar({ tarea, datos }), proveedor: 'simulado', respaldo: proveedor !== 'simulado', aviso };
       }
