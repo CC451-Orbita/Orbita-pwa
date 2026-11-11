@@ -113,6 +113,46 @@
       <button class="btn primario grande" id="btn-iniciar-reunion">Iniciar reunión</button>
     </section>
 
+    <!-- P12. Antesala (sala de espera antes de que empiece la reunión) -->
+    <section class="pantalla" id="p-antesala" data-titulo="Sala de espera">
+      <span class="etiqueta">Sala de espera</span>
+      <h2 id="ante-nombre">—</h2>
+      <p class="sutil" id="ante-codigo"></p>
+      <div class="reloj" id="ante-reloj" aria-live="polite"></div>
+      <div class="tarjeta">
+        <h3>Agenda de hoy</h3>
+        <ul class="agenda-estado" id="ante-agenda"></ul>
+        <div class="medidor"><div id="ante-barra"></div></div>
+        <p class="sutil" id="ante-progreso"></p>
+      </div>
+      <fieldset class="campo">
+        <legend>¿Cómo llegas a esta reunión?</legend>
+        <div class="emociones" role="radiogroup" id="emo-antesala">
+          <button class="chip" data-emo="tranquilo" role="radio" aria-checked="false">😌 Tranquilo</button>
+          <button class="chip" data-emo="normal" role="radio" aria-checked="false">🙂 Normal</button>
+          <button class="chip" data-emo="nervioso" role="radio" aria-checked="false">😟 Nervioso</button>
+        </div>
+      </fieldset>
+      <p class="consejo" id="ante-consejo"></p>
+      <button class="btn secundario grande" id="btn-ir-preparar">✎ Preparar mi participación</button>
+      <button class="btn primario grande" id="btn-entrar-reunion">Entrar a la reunión</button>
+    </section>
+
+    <!-- P11. Preparar mi participación -->
+    <section class="pantalla" id="p-preparar" data-titulo="Preparar participación">
+      <div class="prep-cab">
+        <div id="prep-planeta" class="prep-planeta" aria-hidden="true"></div>
+        <div>
+          <h2>Prepara lo que quieres decir</h2>
+          <p class="sutil"><span id="prep-sala"></span> · Solo tú ves tus notas.</p>
+        </div>
+      </div>
+      <div class="medidor"><div id="prep-barra"></div></div>
+      <p class="sutil" id="prep-progreso" aria-live="polite"></p>
+      <div id="prep-temas"></div>
+      <button class="btn primario grande" id="btn-prep-listo">Listo, volver a la sala de espera</button>
+    </section>
+
     <!-- P5. Reunión (interfaz orbital) -->
     <section class="pantalla" id="p-reunion" data-titulo="Reunión">
       <div class="reunion-cab">
@@ -131,6 +171,7 @@
       <div class="controles">
         <button class="btn-redondo" id="btn-mic" aria-label="Hablar (micrófono)">🎙</button>
         <button class="btn-redondo" id="btn-escribir" aria-label="Escribir un aporte">✎</button>
+        <button class="btn-redondo" id="btn-notas" aria-label="Mis notas preparadas">📝</button>
         <button class="btn-redondo" id="btn-lista" aria-label="Cambiar a lista accesible">☰</button>
         <button class="btn-redondo peligro" id="btn-terminar" aria-label="Terminar reunión">⏹</button>
       </div>
@@ -140,8 +181,8 @@
     <!-- P8. Resumen de la reunión -->
     <section class="pantalla" id="p-resumen" data-titulo="Resumen">
       <h2>Resumen de la reunión</h2>
-      <div class="tarjeta"><h3>✅ Decisiones</h3><ul id="res-decisiones"></ul></div>
-      <div class="tarjeta"><h3>⏳ Temas abiertos</h3><ul id="res-abiertos"></ul></div>
+      <div class="tarjeta"><h3 id="res-titulo-decisiones">✅ Decisiones</h3><div class="res-markdown" id="res-decisiones"></div></div>
+      <div class="tarjeta" id="res-tarjeta-abiertos"><h3>⏳ Temas abiertos</h3><div class="res-markdown" id="res-abiertos"></div></div>
       <div class="tarjeta"><h3>🪐 Equilibrio de la reunión</h3>
         <div class="medidor"><div id="res-medidor"></div></div>
         <p id="res-equilibrio" class="sutil"></p>
@@ -164,7 +205,11 @@
     <section class="pantalla" id="p-informe" data-titulo="Tu evolución">
       <h2>Tu órbita en el tiempo</h2>
       <div class="tarjeta reflexion"><p id="inf-reflexion">—</p></div>
-      <div class="tarjeta"><h3>Equilibrio de tus reuniones</h3><div id="inf-grafico" class="grafico"></div></div>
+      <section class="tarjeta" id="inf-revision" aria-labelledby="inf-revision-titulo" hidden>
+        <h3 id="inf-revision-titulo">Revisa tus aportes</h3>
+        <div id="inf-aportes"></div>
+      </section>
+      <div class="tarjeta"><h3>Equilibrio de las reuniones</h3><p class="sutil">Los puntos con fecha corresponden al historial de ejemplo.</p><div id="inf-grafico" class="grafico"></div></div>
       <div class="tarjeta"><h3>Lo que Órbita aprendió de ti</h3><ul id="inf-aprendizaje"></ul></div>
       <button class="btn primario grande" id="btn-volver-salas">Volver a salas</button>
     </section>
@@ -180,27 +225,43 @@
           <option value="ollama">Ollama (LLM local en esta laptop)</option>
         </select>
         <label class="campo" id="campo-key">API key de Gemini<input id="in-apikey" type="password" placeholder="AIza…" autocomplete="off"></label>
-        <p class="sutil">La key se guarda solo en este navegador. Si el proveedor falla, Órbita usa el simulado automáticamente.</p>
+        <p class="sutil">La clave de Gemini se mantiene en memoria hasta recargar o cerrar la pestaña. Si el proveedor falla, Órbita muestra una respuesta simulada.</p>
       </fieldset>
       <button class="btn secundario" id="btn-probar-llm">Probar proveedor</button>
-      <p class="sutil" id="resultado-llm"></p>
+      <p class="sutil" id="resultado-llm" role="status"></p>
       <button class="btn secundario" id="btn-editar-perfil">Editar perfil y accesibilidad</button>
       <button class="btn texto peligro" id="btn-borrar">Borrar todos mis datos</button>
     </section>
   </main>
 
   <!-- P6. Invitación privada (ventana de órbita) -->
-  <div class="modal" id="m-invitacion" role="dialog" aria-modal="true" aria-labelledby="inv-titulo" hidden>
+  <div class="modal" id="m-invitacion" role="dialog" aria-modal="true" aria-labelledby="inv-titulo" aria-describedby="inv-tema inv-contexto inv-pregunta" hidden>
     <div class="hoja">
       <span class="etiqueta">Solo tú ves esto</span>
-      <h2 id="inv-titulo">✦ Tu ventana de órbita</h2>
+      <h2 id="inv-titulo" tabindex="-1">✦ Tu ventana de órbita</h2>
+      <p class="etiqueta" id="inv-tema"></p>
+      <ul class="inv-contexto" id="inv-contexto" hidden></ul>
       <p class="pregunta" id="inv-pregunta"></p>
+      <div class="nota-preparada" id="inv-nota" hidden>
+        <span class="etiqueta">📝 Tu idea preparada</span>
+        <p id="inv-nota-texto"></p>
+        <button class="btn primario" id="btn-usar-nota">Compartir mi idea preparada</button>
+      </div>
       <div class="acciones-inv" id="acciones-inv">
         <button class="btn primario" data-resp="hablar">🎙 Hablar ahora</button>
         <button class="btn secundario" data-resp="escribir">✎ Escribir aporte</button>
         <button class="btn texto" data-resp="paso">Paso esta vez</button>
       </div>
       <div class="cuenta"><div id="inv-cuenta"></div></div>
+    </div>
+  </div>
+
+  <!-- Mis notas (durante la reunión) -->
+  <div class="modal" id="m-notas" role="dialog" aria-modal="true" aria-labelledby="notas-titulo" hidden>
+    <div class="hoja">
+      <h2 id="notas-titulo">📝 Mis notas preparadas</h2>
+      <ul class="lista-notas" id="lista-notas"></ul>
+      <button class="btn texto" id="btn-cerrar-notas">Cerrar</button>
     </div>
   </div>
 
@@ -228,11 +289,14 @@
 
 <script src="data/simulated.js"></script>
 <script src="js/profile.js"></script>
+<script src="vendor/markdown-it/markdown-it.umd.min.js"></script>
+<script src="js/markdown.js"></script>
 <script src="js/llm.js"></script>
 <script src="js/voice.js"></script>
 <script src="js/orbits.js"></script>
 <script src="js/room.js"></script>
 <script src="js/app.js"></script>
+<script src="js/prep.js"></script>
 <script src="js/demo.js"></script>
 </body>
 </html>

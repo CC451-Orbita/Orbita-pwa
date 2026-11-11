@@ -124,6 +124,11 @@ body.sin-subtitulos .subtitulos { display: none; }
 .hoja { width: 100%; max-width: 560px; background: var(--fondo2); border-top: 2px solid var(--sol); border-radius: 22px 22px 0 0; padding: 20px 18px 26px; animation: subir var(--anim) ease-out; }
 @keyframes subir { from { transform: translateY(40px); opacity: 0; } }
 .pregunta { font-size: 19px; font-weight: 600; margin: 6px 0 14px; }
+#m-invitacion .hoja { max-height: 100%; overflow-y: auto; }
+#inv-tema { margin: 10px 0 4px; }
+.inv-contexto { margin: 6px 0 12px; padding: 8px 12px; list-style: none; border-left: 2px solid var(--teal); color: var(--sutil); font-size: .9rem; line-height: 1.45; overflow-wrap: anywhere; }
+.inv-contexto li + li { margin-top: 6px; }
+.inv-contexto strong { color: var(--texto); }
 .cuenta { height: 4px; background: var(--borde); border-radius: 4px; overflow: hidden; margin-top: 8px; }
 .cuenta div { height: 100%; background: var(--sol); width: 100%; }
 .fila { display: flex; gap: 10px; } .fila .btn { flex: 1; }
@@ -132,11 +137,28 @@ body.sin-subtitulos .subtitulos { display: none; }
 .tarjeta { background: var(--tarjeta); border-radius: var(--radio); padding: 12px 14px; margin: 10px 0; }
 .tarjeta h3 { margin: 2px 0 8px; color: var(--texto); }
 .tarjeta ul { margin: 0; padding-left: 18px; }
+.res-markdown { line-height: 1.45; overflow-wrap: anywhere; overflow-x: auto; }
+.res-markdown > :first-child { margin-top: 0; }
+.res-markdown > :last-child { margin-bottom: 0; }
+.res-markdown ol { margin: 0; padding-left: 1.4em; }
+.res-markdown li + li { margin-top: 4px; }
+.res-markdown li :is(ul, ol) { margin-top: 4px; }
+.res-markdown :is(h1, h2, h3, h4, h5, h6) { font-size: 1em; }
+.res-markdown blockquote { margin-inline: 0; padding-left: 12px; border-left: 2px solid var(--teal); }
+.res-markdown pre { white-space: pre-wrap; }
+.res-markdown a { color: var(--teal); }
 .medidor { height: 12px; background: var(--fondo2); border-radius: 6px; overflow: hidden; }
 #res-medidor { height: 100%; background: linear-gradient(90deg, var(--primario), var(--teal)); width: 0; transition: width 800ms ease-out; }
 .barras .barra-p { display: flex; align-items: center; gap: 8px; font-size: 13px; margin: 5px 0; }
 .barras .barra-p span:first-child { width: 70px; } .barras .pista { flex: 1; height: 8px; background: var(--fondo2); border-radius: 4px; overflow: hidden; } .barras .pista div { height: 100%; }
 .reflexion p { font-size: 18px; margin: 4px 0; }
+.revision-tema { padding-top: 10px; overflow-wrap: anywhere; }
+.revision-tema + .revision-tema { border-top: 1px solid var(--borde); margin-top: 12px; }
+.revision-tema h4 { margin: 0 0 8px; font-size: 1em; }
+.revision-tema h5 { margin: 12px 0 4px; font-size: .9em; }
+.revision-tema .revision-aportes { list-style: none; padding: 0; }
+.revision-aportes li + li { margin-top: 10px; }
+.revision-aportes p { margin: 2px 0 0; }
 .grafico svg { width: 100%; height: auto; }
 
 /* Simulación guiada y toast */
@@ -147,3 +169,28 @@ body.sin-subtitulos .subtitulos { display: none; }
 .toast { position: fixed; left: 50%; bottom: 20px; transform: translateX(-50%); z-index: 60; background: var(--texto); color: var(--fondo); padding: 10px 16px; border-radius: 12px; font-weight: 600; max-width: 90%; }
 #main:focus { outline: none; }
 body.alto-contraste { background: #000; }
+
+/* ---------- PC03: Antesala y Preparación ---------- */
+.reloj { font-size: 22px; font-weight: 700; color: var(--sol); margin: 6px 0 10px; }
+.agenda-estado { list-style: none; padding: 0; margin: 0 0 10px; }
+.agenda-estado li { padding: 6px 0; border-bottom: 1px solid var(--borde); }
+#ante-barra, #prep-barra { height: 100%; background: linear-gradient(90deg, var(--primario), var(--teal)); width: 0; transition: width 400ms ease-out; }
+.consejo { background: rgba(79,199,194,.12); border-left: 3px solid var(--teal); padding: 8px 12px; border-radius: 8px; font-size: 14px; }
+.prep-cab { display: flex; gap: 14px; align-items: center; }
+.prep-cab h2 { margin: 0; font-size: 20px; }
+.prep-planeta { width: 54px; height: 54px; border-radius: 50%; flex: none; transition: all 400ms; }
+.tema-prep h3 { margin: 4px 0 6px; color: var(--texto); font-size: 17px; }
+.tema-cab { display: flex; justify-content: space-between; align-items: center; }
+.estado-tema { font-size: 13px; color: var(--ok); }
+.pregunta-guia { font-size: 14px; color: #FFE3B0; margin: 0 0 6px; overflow-wrap: anywhere; }
+.acciones-prep { display: flex; flex-wrap: wrap; gap: 6px; margin: 6px 0; }
+.chip.escuchando { background: var(--peligro); border-color: var(--peligro); animation: latido 1s infinite; }
+.sugerencia { background: var(--fondo2); border: 1px dashed var(--teal); border-radius: 10px; padding: 8px 10px; margin: 6px 0; font-size: 14px; }
+.sugerencia .btn { min-height: 40px; margin: 4px 0; }
+.nota-preparada { background: rgba(140,124,240,.15); border: 1px solid var(--primario); border-radius: 12px; padding: 10px 12px; margin: 0 0 10px; }
+.nota-preparada p { margin: 4px 0 2px; font-size: 15px; }
+.lista-notas { list-style: none; padding: 0; margin: 0; }
+.lista-notas li { background: var(--tarjeta); border-radius: 10px; padding: 10px 12px; margin-bottom: 8px; }
+.lista-notas li.actual { box-shadow: 0 0 0 1.5px var(--sol); }
+.lista-notas .btn { min-height: 40px; margin: 6px 0 0; }
+.controles { flex-wrap: wrap; gap: 12px; }

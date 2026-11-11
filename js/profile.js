@@ -17,29 +17,36 @@
     respuestas: { hablar: 0, escribir: 0, paso: 0, sinRespuesta: 0 },
     emociones: [],                     // {fecha, momento: 'inicio'|'fin', valor, origen: 'declarada'|'inferida'}
     reuniones: 0,
-    aportesTotales: 0,
-    llm: { proveedor: 'simulado', apiKey: '' }
+    llm: { proveedor: 'simulado', apiKey: '' },
+    preparaciones: {}                  // { codigoSala: { temaId: { nota, invitar, ensayos, duracionSeg, usada } } }
   };
 
-  let cache = null;
+  let cache = null, temporal = null;
+  const clonar = o => JSON.parse(JSON.stringify(o));
 
   function cargar() {
+    if (temporal) return temporal;
     if (cache) return cache;
     try {
       const raw = localStorage.getItem(CLAVE);
-      cache = raw ? Object.assign(structuredClone(PERFIL_INICIAL), JSON.parse(raw)) : structuredClone(PERFIL_INICIAL);
+      cache = raw ? Object.assign(clonar(PERFIL_INICIAL), JSON.parse(raw)) : clonar(PERFIL_INICIAL);
+      cache.llm = { ...PERFIL_INICIAL.llm, ...cache.llm };
+      if (cache.llm.apiKey) guardar();
     } catch (e) {
-      cache = structuredClone(PERFIL_INICIAL); // modo privado: el perfil vive solo en memoria
+      cache = clonar(PERFIL_INICIAL); // modo privado: el perfil vive solo en memoria
     }
     return cache;
   }
 
   function guardar() {
-    try { localStorage.setItem(CLAVE, JSON.stringify(cache)); } catch (e) { /* sin almacenamiento: seguimos en memoria */ }
+    if (temporal) return;
+    const { apiKey, ...llm } = cache.llm;
+    try { localStorage.setItem(CLAVE, JSON.stringify({ ...cache, llm })); } catch (e) { /* sin almacenamiento: seguimos en memoria */ }
   }
 
   window.Perfil = {
     obtener: cargar,
+    usarTemporal(activo) { temporal = activo ? clonar(PERFIL_INICIAL) : null; },
     actualizar(cambios) { Object.assign(cargar(), cambios); guardar(); },
     actualizarAccesibilidad(cambios) { Object.assign(cargar().accesibilidad, cambios); guardar(); },
 
@@ -50,7 +57,6 @@
       const { hablar, escribir } = p.respuestas;
       p.canalPreferido = escribir > hablar ? 'escribir' : 'hablar';
       if (tipo === 'sinRespuesta') p.toleranciaSilencioSeg = Math.min(40, p.toleranciaSilencioSeg + 5);
-      if (tipo === 'hablar' || tipo === 'escribir') p.aportesTotales++;
       guardar();
     },
 
@@ -82,6 +88,13 @@
 
     cerrarReunion() { cargar().reuniones++; guardar(); },
 
-    borrarTodo() { try { localStorage.removeItem(CLAVE); } catch (e) {} cache = null; }
+    borrarTodo() {
+      if (temporal) {
+        temporal = clonar(PERFIL_INICIAL);
+        return;
+      }
+      try { localStorage.removeItem(CLAVE); } catch (e) {}
+      cache = null;
+    }
   };
 })();

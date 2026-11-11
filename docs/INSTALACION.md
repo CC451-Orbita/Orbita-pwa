@@ -44,13 +44,30 @@ Para probar en el celular dentro de la misma red Wi-Fi: `python -m http.server 8
 
 1. Sirve la app con la opción 2.
 2. Abre **dos pestañas** en <http://localhost:8000>.
-3. En cada pestaña crea un perfil con nombre distinto.
-4. En ambas, únete a la misma sala (por ejemplo `ORB-4821`).
-5. Lo que escribas o digas en una pestaña aparece como un planeta nuevo en la otra.
+3. Con **Comenzar**, entra con un perfil. En la segunda pestaña abre **Ajustes → Editar perfil** y guarda un nombre de prueba distinto.
+4. En ambas, únete a la misma sala (por ejemplo `ORB-4821`) y pulsa **Entrar a la reunión**.
+5. Escribe un aporte en la primera. En la segunda deben aparecer el planeta y el subtítulo con el ícono de aporte escrito.
+
+## Probar la preparación de la participación
+
+1. Entra a una sala (por ejemplo **Daily del equipo Atlas**). Llegarás a la **Sala de espera**.
+2. Pulsa **✎ Preparar mi participación**.
+3. Escribe o dicta (🎙) una idea en cada tema. Se guarda sola.
+4. Prueba **✨ Hazlo corto**, **🔊 Escuchar** y **🎤 Ensayar**. «Hazlo corto» procesa la nota localmente.
+5. Desmarca "Quiero que me inviten…" en un tema para que Órbita no te invite ahí.
+6. Vuelve a la sala de espera y pulsa **Entrar a la reunión**: cuando llegue tu ventana de órbita verás tu idea y podrás compartirla con un toque. También está el botón **📝 Mis notas**.
+
+## Ejecutar las pruebas automáticas
+
+Requiere Node.js 18 o superior (no hay que instalar nada más):
+
+```bash
+node tests/run.js
+```
 
 ## Usar un LLM real
 
-**Gemini (remoto):** Ajustes ⚙ → Proveedor: *Gemini* → pega tu API key → *Probar proveedor*.
+**Gemini (remoto).** Entra con **Comenzar**, abre **Ajustes**, selecciona **Gemini**, pega tu clave y pulsa **Probar proveedor**. La prueba envía un ejemplo ficticio y muestra el proveedor de la respuesta. La clave queda en memoria de esa pestaña y se vuelve a ingresar al recargar.
 
 **Ollama (local):**
 
@@ -61,7 +78,11 @@ OLLAMA_ORIGINS="*" ollama serve
 
 Luego, Ajustes ⚙ → Proveedor: *Ollama*.
 
-Si el proveedor falla, Órbita usa automáticamente el proveedor simulado y lo indica en el resumen.
+Si el proveedor falla, Órbita identifica el respaldo como simulado. La agenda de prueba, el guion y los hablantes ficticios siguen siendo simulados cuando se conecta un proveedor real.
+
+## Probar voz real
+
+Abre `http://localhost:8000` en Chrome o Edge y entra con **Comenzar**. En **Preparar mi participación**, pulsa **Dictar**, concede permiso al micrófono y habla. El reconocimiento del navegador puede usar un servicio en línea. Confirma que aparece el texto en tu nota y prueba **Ensayar** para ver duración y ritmo. Para **Escuchar**, habilita una voz local en español en tu dispositivo y sube el volumen. Si falla el reconocimiento, puedes escribir la nota.
 
 ## Publicar en GitHub Pages
 

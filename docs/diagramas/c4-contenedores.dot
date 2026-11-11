@@ -11,7 +11,9 @@ digraph G {
     voz [label="Módulo de voz\n(voice.js)\nreconocimiento, TTS,\ncomandos, vibración", fillcolor="#C9C1FA"];
     llm [label="Capa de abstracción LLM\n(llm.js)\nSimulado | Gemini | Ollama\n+ validador de tono", fillcolor="#C9C1FA"];
     perf [label="Perfil persistente\n(profile.js)\npreferencias, ritmo,\nrespuestas, emociones", fillcolor="#C9C1FA"];
+    prep [label="Preparación de la participación\n(prep.js) · NUEVO\nnotas por tema, guía LLM,\nensayo, preferencias de invitación", fillcolor="#FFD9A8"];
     demo [label="Simulación guiada\n(demo.js)", fillcolor="#E6E2FC"];
+    tests [label="Pruebas automáticas\n(tests/run.js) · 20 pruebas", fillcolor="#E6E2FC"];
     sw [label="Service Worker (sw.js)\ncaché offline", fillcolor="#E6E2FC"];
   }
   ls [label="localStorage\n[Almacén del navegador]", shape=cylinder, fillcolor="#FFE3B0"];
@@ -21,7 +23,8 @@ digraph G {
   ws [label="Web Speech API\n[externo]", fillcolor="#999999", fontcolor=white];
   bc [label="BroadcastChannel /\nSupabase Realtime", fillcolor="#999999", fontcolor=white];
   u -> ui [label="toques, voz, teclado"];
-  ui -> orb; ui -> sala; ui -> voz; ui -> perf; demo -> ui [label="automatiza"];
+  ui -> orb; ui -> sala; ui -> voz; ui -> perf; ui -> prep; demo -> ui [label="automatiza"];
+  prep -> llm [label="guía y\n'hazlo corto'"]; prep -> voz [label="dictar,\nensayar"]; prep -> perf [label="guarda notas"];
   sala -> llm [label="pide invitación\ny resumen"];
   ui -> llm;
   llm -> g [label="HTTPS"]; llm -> ol [label="HTTP local"];

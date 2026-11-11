@@ -1,0 +1,11 @@
+{
+  "name": "orbita-pwa",
+  "version": "0.7.0",
+  "description": "PWA que equilibra la participación en reuniones con voz, LLM e interfaz orbital (CC451 – UNI).",
+  "private": true,
+  "license": "MIT",
+  "scripts": {
+    "start": "python3 -m http.server 8000",
+    "test": "node tests/run.js"
+  }
+}

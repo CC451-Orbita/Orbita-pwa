@@ -35,7 +35,31 @@ C4Context
 | `voice.js` | Reconocimiento de voz, comandos, TTS y vibración | RF-04 a RF-06, RF-18 |
 | `profile.js` | Perfil persistente que aprende del uso | RF-14 a RF-17 |
 | `sw.js` | Caché *offline* del *app shell* | RNF-01 |
-| `demo.js` | Simulación guiada del flujo completo con datos simulados | RF-24 |
+| `prep.js` | **Nuevo.** Preparación de la participación: notas por tema, pregunta guía y "Hazlo corto" con el LLM, dictado y ensayo con voz, preferencia de invitación por tema, sala de espera | RF-30 a RF-37, RNF-16 |
+| `demo.js` | Simulación guiada del flujo completo (12 pasos) con datos simulados | RF-24 |
+| `tests/run.js` | 22 pruebas automáticas de la lógica (sin dependencias) | RNF-12 |
+
+## Flujo de la preparación de la participación
+
+```mermaid
+sequenceDiagram
+  participant U as Usuario
+  participant P as prep.js
+  participant L as llm.js
+  participant V as voice.js
+  participant R as room.js
+  U->>P: abre "Preparar mi participación"
+  P->>L: guiaPreparacion(tema)
+  L-->>P: pregunta guía
+  U->>P: escribe o dicta su idea (V)
+  P->>P: guardado automático en el perfil
+  U->>P: "Hazlo corto"
+  P->>P: pulir nota en el dispositivo (≤ 20 palabras)
+  U->>V: "Ensayar" (mide duración y ritmo)
+  Note over R: durante la reunión
+  R->>U: ventana de órbita del tema + idea preparada
+  U->>R: "Compartir mi idea preparada" (aparece con 📝)
+```
 
 ## Decisiones de arquitectura
 
@@ -43,7 +67,9 @@ C4Context
 2. **Capa de abstracción del LLM.** Las pantallas nunca llaman a un proveedor directamente. Cambiar de Gemini a Ollama (o a otro) es agregar un objeto con el método `generar()`.
 3. **Degradación elegante.** Sin voz → texto. Sin LLM → proveedor simulado. Sin red → caché del service worker. Sin `localStorage` → perfil en memoria.
 4. **Privacidad por diseño.** No se guarda audio; las invitaciones son privadas; el perfil vive en el dispositivo.
-5. **Tiempo real intercambiable.** El prototipo usa `BroadcastChannel` (mismo navegador); en producción se reemplaza por Supabase Realtime o WebSocket sin cambiar la interfaz de `room.js`.
+5. **La preparación es privada y local.** El navegador guarda y acorta las notas en el dispositivo. Cuando la persona comparte una, se incorpora a la reunión y puede formar parte del contexto del LLM.
+6. **Lógica separada de la interfaz.** `Preparacion`, `Perfil`, `LLM` y `Sala.indiceEquilibrio` no dependen del DOM, por eso se prueban con `node tests/run.js`.
+7. **Tiempo real intercambiable.** El prototipo usa `BroadcastChannel` (mismo navegador); en producción se reemplaza por Supabase Realtime o WebSocket sin cambiar la interfaz de `room.js`.
 
 ## Flujo de la ventana de órbita (secuencia)
 
