@@ -2,3 +2,12 @@ node_modules/
 .DS_Store
 *.log
 .env
+
+.venv/
+__pycache__/
+.pytest_cache/
+*.py[cod]
+/orbita.db
+/orbita.db-*
+/orbita-pwa.zip
+/API_KEYS.md

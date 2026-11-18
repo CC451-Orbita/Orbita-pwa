@@ -1,0 +1,24 @@
+digraph G {
+  graph [rankdir=TB, fontname="DejaVu Sans", nodesep=0.3, ranksep=0.45, bgcolor="white", label="Diagrama de interacción entre pantallas – Órbita v1.0 (18 vistas)", labelloc=t, fontsize=16];
+  node [shape=box, style="rounded,filled", fontname="DejaVu Sans", fontsize=9.5, fillcolor="#E6E2FC", color="#6F5ED8", margin="0.12,0.06"];
+  edge [fontname="DejaVu Sans", fontsize=8, color="#444444"];
+  P1 [label="P1 Bienvenida\n+ consentimiento"]; P2 [label="P2 Perfil"]; P3 [label="P3 Salas"];
+  P15 [label="P15 Tutorial\n(primera visita)", fillcolor="#FFD9A8"];
+  P4 [label="P4 Crear sala\n(tipo, agenda editable)"];
+  L [label="Enlace / QR de\ninvitación", shape=note, fillcolor="#F4F4F4", color="#999999"];
+  P12 [label="P12 Sala de espera"]; P11 [label="P11 Preparar\nparticipación"];
+  P16 [label="P16 Invitar y\nmiembros (QR)", fillcolor="#FFD9A8"]; P17 [label="P17 Voces de la sala\n(presencial)", fillcolor="#FFD9A8"];
+  P5 [label="P5 Reunión\n(real o demo)", fillcolor="#6F5ED8", fontcolor=white];
+  P6 [label="P6 Invitación privada", fillcolor="#FFE3B0"]; P7 [label="P7 Aporte escrito", fillcolor="#FFE3B0"]; MN [label="Mis notas 📝", fillcolor="#FFE3B0"];
+  P8 [label="P8 Resumen"]; P9 [label="P9 Tu evolución"];
+  P14 [label="P14 Historial", fillcolor="#FFD9A8"]; P13 [label="P13 Panel del equipo", fillcolor="#FFD9A8"];
+  P10 [label="P10 Ajustes\n(IA, Supabase)"]; P18 [label="P18 Encuesta SUS", fillcolor="#FFD9A8"];
+  ANY [label="Cualquier pantalla", shape=note, fillcolor="#F4F4F4", color="#999999"];
+  P1 -> P2 [label="primera vez"]; P1 -> P3 [label="perfil existe"]; P2 -> P3;
+  P3 -> P15 [label="automático", style=dashed]; P3 -> P4 [label="+ Crear"]; P3 -> P12 [label="elegir /\ncódigo"];
+  L -> P1 [label="abre"]; L -> P12 [label="tras perfil", style=dashed];
+  P4 -> P12; P12 -> P11 [label="Preparar"]; P11 -> P12; P12 -> P16 [label="Invitar"]; P12 -> P17 [label="Voces"];
+  P12 -> P5 [label="Entrar"]; P5 -> P6 [label="cierre de tema", style=dashed]; P6 -> P7 [label="Escribir"]; P6 -> P5; P7 -> P5; P5 -> MN; MN -> P5;
+  P5 -> P8 [label="fin"]; P8 -> P9; P8 -> P14; P8 -> P13; P3 -> P14; P3 -> P13; P3 -> P9; P9 -> P3;
+  ANY -> P10 [label="⚙"]; P10 -> P15 [label="Ver tutorial"]; P10 -> P18 [label="Encuesta"]; P10 -> P2;
+}

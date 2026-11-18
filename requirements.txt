@@ -1,0 +1,4 @@
+fastapi
+google-genai
+pydantic>=2,<3
+uvicorn[standard]

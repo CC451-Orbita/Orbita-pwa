@@ -1,0 +1,20 @@
+digraph G {
+  graph [rankdir=TB, fontname="DejaVu Sans", nodesep=0.5, ranksep=0.8, bgcolor="white", label="Diagrama C4 – Nivel 1: Contexto del sistema Órbita (v1.0)", labelloc=t, fontsize=16];
+  node [shape=box, style="rounded,filled", fontname="DejaVu Sans", fontsize=11, color="#3A3366", penwidth=1.2, margin="0.25,0.15"];
+  edge [fontname="DejaVu Sans", fontsize=9, color="#555555"];
+  p [label="Participante\n[Persona]\nPrepara su participación, habla o escribe,\nrecibe invitaciones privadas", fillcolor="#08427B", fontcolor=white];
+  f [label="Facilitador / Docente\n[Persona]\nCrea la sala y la agenda, invita,\nrevisa historial y panel del equipo", fillcolor="#08427B", fontcolor=white];
+  pd [label="Participante con discapacidad\n[Persona]\nSubtítulos, lista accesible, aporte\nescrito, vibración, teclado", fillcolor="#08427B", fontcolor=white];
+  o [label="Órbita\n[Sistema de software – PWA]\nEquilibra la participación en reuniones con voz,\nIA, interfaz orbital y diarización local", fillcolor="#6F5ED8", fontcolor=white, fontsize=13];
+  llm [label="Proveedor LLM\n[Sistema externo]\nGemini API (remoto) u Ollama (local)", fillcolor="#999999", fontcolor=white];
+  voz [label="Navegador: voz y audio\n[Sistema externo]\nWeb Speech API + Web Audio", fillcolor="#999999", fontcolor=white];
+  rt [label="Supabase Realtime\n[Sistema externo, opcional]\nCanales broadcast + presence", fillcolor="#999999", fontcolor=white];
+  {rank=same; p; f; pd}
+  {rank=same; llm; voz; rt}
+  p -> o [label="prepara, habla, escribe,\nresponde invitaciones"];
+  f -> o [label="crea salas, invita (enlace/QR),\nconsulta historial y panel"];
+  pd -> o [label="usa modos\naccesibles"];
+  o -> llm [label="invitaciones, sugerencias,\nresúmenes [HTTPS/JSON]"];
+  o -> voz [label="transcribe, lee en voz alta,\nhuella de voz [JS API]"];
+  o -> rt [label="aportes, cierre de tema,\npresencia [WebSocket]"];
+}

@@ -1,0 +1,1136 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Órbita – Videoconferencias colaborativas e inclusivas</title>
+
+  <!-- Tailwind CSS Engine con paleta corporativa espacial sobria -->
+  <script src="vendor/tailwind/tailwind.js"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            espacio: '#030712',      // Deep Slate 950
+            superficie: '#0b1329',   // Space Navy
+            borde: 'rgba(51, 65, 85, 0.45)',
+            sol: '#d97706',          // Champagne Gold / Amber cálido
+            equilibrio: '#0284c7',   // Steel Blue
+            acento: '#2563eb',       // Executive Blue
+            exito: '#059669'         // Mint Emerald
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Librerías de la comunidad (D3, Marked, Confetti, Lucide, Alpine) -->
+  <script src="vendor/d3/d3.min.js"></script>
+  <script src="vendor/marked/marked.min.js"></script>
+  <script src="vendor/confetti/confetti.min.js"></script>
+  <script src="vendor/lucide/lucide.min.js"></script>
+  <script defer src="vendor/alpine/alpine.min.js"></script>
+
+  <!-- Estilos y módulos -->
+  <link rel="stylesheet" href="css/orbita.css">
+  <script src="js/api.js"></script>
+  <script src="js/orbits_d3.js"></script>
+  <script src="js/app.js"></script>
+</head>
+
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col font-sans select-none" x-data="orbitaApp">
+
+  <!-- ================= BARRA SUPERIOR EJECUTIVA ================= -->
+  <header class="h-14 border-b border-slate-800 bg-slate-900/80 backdrop-blur-md px-4 sm:px-6 flex items-center justify-between sticky top-0 z-40">
+    <div class="flex items-center gap-3 cursor-pointer" @click="navegarA(usuario ? 'salas' : 'bienvenida')">
+      <div class="w-8 h-8 rounded-lg bg-slate-800 border border-slate-700 flex items-center justify-center text-sky-400 shadow-sm">
+        <i data-lucide="orbit" class="w-4 h-4"></i>
+      </div>
+      <div>
+        <h1 class="text-sm font-bold tracking-tight text-white flex items-center gap-2">
+          Órbita
+          <span class="text-[10px] px-1.5 py-0.2 rounded bg-sky-950 text-sky-400 border border-sky-800/60 font-medium">v3.0</span>
+        </h1>
+      </div>
+    </div>
+
+    <!-- Menú de usuario y accesibilidad con menú desplegable -->
+    <div class="flex items-center gap-2.5">
+      <template x-if="usuario">
+        <div class="relative" x-data="{ abierto: false }" @click.outside="abierto = false">
+          <button @click="abierto = !abierto"
+                  class="flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-slate-800/80 border border-slate-700 hover:bg-slate-700/80 transition text-xs font-semibold">
+            <span class="w-2.5 h-2.5 rounded-full" :style="`background-color: ${usuario.color}`"></span>
+            <span x-text="usuario.nombre" class="text-slate-200"></span>
+            <i data-lucide="chevron-down" class="w-3.5 h-3.5 text-slate-400"></i>
+          </button>
+
+          <!-- Menú anidado desplegable -->
+          <div x-show="abierto" x-transition
+               class="absolute right-0 mt-2 w-44 rounded-xl bg-slate-900 border border-slate-700 shadow-2xl py-1 z-50 text-xs">
+            <div class="px-3 py-1.5 border-b border-slate-800 text-slate-400">
+              <span class="text-[10px] block">Identificador:</span>
+              <strong class="text-white font-mono text-[11px]" x-text="usuario.id"></strong>
+            </div>
+            <button @click="navegarA('salas'); abierto = false;" class="w-full text-left px-3 py-2 text-slate-300 hover:bg-slate-800 flex items-center gap-2">
+              <i data-lucide="layout-grid" class="w-3.5 h-3.5"></i>
+              <span>Mis salas</span>
+            </button>
+            <button @click="cerrarSesion(); abierto = false;" class="w-full text-left px-3 py-2 text-rose-400 hover:bg-slate-800 flex items-center gap-2 border-t border-slate-800">
+              <i data-lucide="log-out" class="w-3.5 h-3.5"></i>
+              <span>Cerrar sesión</span>
+            </button>
+          </div>
+        </div>
+      </template>
+
+      <!-- Botón de centro de accesibilidad -->
+      <button class="p-1.5 rounded-lg bg-slate-800/80 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 transition"
+              @click="mostrarModalAccesibilidad = true"
+              title="Centro de accesibilidad e inclusión"
+              aria-label="Abrir centro de accesibilidad">
+        <i data-lucide="accessibility" class="w-4 h-4"></i>
+      </button>
+    </div>
+  </header>
+
+  <!-- ================= CONTENEDOR PRINCIPAL ================= -->
+  <main class="flex-1 w-full flex flex-col justify-center max-w-7xl mx-auto p-4 sm:p-6">
+
+    <!-- 1. PANTALLA: BIENVENIDA -->
+    <section x-show="vista === 'bienvenida'" class="text-center max-w-2xl mx-auto py-12" x-transition>
+      <div class="w-14 h-14 mx-auto mb-5 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-center text-sky-400 shadow-xl">
+        <i data-lucide="orbit" class="w-7 h-7"></i>
+      </div>
+      <h2 class="text-2xl sm:text-3xl font-bold text-white tracking-tight mb-3">
+        Deliberación ejecutiva con equilibrio orbital
+      </h2>
+      <p class="text-slate-400 text-xs sm:text-sm mb-6 leading-relaxed">
+        Plataforma corporativa que utiliza metáforas de física orbital e inteligencia artificial contextualizada para optimizar la toma de decisiones grupales.
+      </p>
+      <div class="flex gap-3 justify-center">
+        <button class="px-5 py-2.5 rounded-lg bg-sky-600 hover:bg-sky-500 text-white font-medium text-xs shadow transition flex items-center gap-2"
+                @click="modoAuth = 'login'; navegarA('auth')">
+          <span>Ingresar a la plataforma</span>
+          <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>
+        </button>
+        <button class="px-5 py-2.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 font-medium border border-slate-700 text-xs transition"
+                @click="modoAuth = 'registro'; navegarA('auth')">
+          Registrar usuario
+        </button>
+      </div>
+    </section>
+
+    <!-- 2. PANTALLA: AUTENTICACIÓN (SQLITE) -->
+    <section x-show="vista === 'auth'" class="max-w-md w-full mx-auto" x-transition>
+      <div class="tarjeta-vidrio rounded-2xl p-6 sm:p-7 shadow-2xl">
+        <div class="flex border-b border-slate-800 mb-5">
+          <button class="flex-1 pb-2.5 text-xs font-bold uppercase tracking-wider text-center border-b-2 transition"
+                  :class="modoAuth === 'login' ? 'border-sky-500 text-sky-400' : 'border-transparent text-slate-400 hover:text-white'"
+                  @click="modoAuth = 'login'; errorAuth = ''">
+            Iniciar sesión
+          </button>
+          <button class="flex-1 pb-2.5 text-xs font-bold uppercase tracking-wider text-center border-b-2 transition"
+                  :class="modoAuth === 'registro' ? 'border-sky-500 text-sky-400' : 'border-transparent text-slate-400 hover:text-white'"
+                  @click="modoAuth = 'registro'; errorAuth = ''">
+            Crear cuenta
+          </button>
+        </div>
+
+        <template x-if="errorAuth">
+          <div class="mb-4 p-2.5 rounded-lg bg-rose-500/10 border border-rose-500/30 text-rose-400 text-xs" x-text="errorAuth"></div>
+        </template>
+
+        <!-- Formulario Login -->
+        <form x-show="modoAuth === 'login'" @submit.prevent="ejecutarLogin()" class="space-y-3.5">
+          <div>
+            <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1">Usuario:</label>
+            <input type="text" x-model="authForm.loginUser" required placeholder="ej. gabriel"
+                   class="w-full px-3 py-2 rounded-lg bg-slate-900 border border-slate-700 text-white text-xs focus:outline-none focus:border-sky-500">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1">Contraseña:</label>
+            <input type="password" x-model="authForm.loginPass" required placeholder="••••••••"
+                   class="w-full px-3 py-2 rounded-lg bg-slate-900 border border-slate-700 text-white text-xs focus:outline-none focus:border-sky-500">
+          </div>
+          <button type="submit" :disabled="cargandoAuth"
+                  class="w-full py-2.5 rounded-lg bg-sky-600 hover:bg-sky-500 font-semibold text-white text-xs shadow transition mt-2 disabled:opacity-50">
+            <span x-text="cargandoAuth ? 'Autenticando...' : 'Entrar a la plataforma'"></span>
+          </button>
+        </form>
+
+        <!-- Formulario Registro -->
+        <form x-show="modoAuth === 'registro'" @submit.prevent="ejecutarRegistro()" class="space-y-3">
+          <div>
+            <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1">Nombre de usuario:</label>
+            <input type="text" x-model="authForm.regUser" required placeholder="ej. anngie"
+                   class="w-full px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-white text-xs focus:outline-none focus:border-sky-500">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1">Contraseña:</label>
+            <input type="password" x-model="authForm.regPass" required placeholder="Mínimo 4 caracteres"
+                   class="w-full px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-white text-xs focus:outline-none focus:border-sky-500">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1">Nombre visible o cargo:</label>
+            <input type="text" x-model="authForm.regNombre" required placeholder="ej. Anngie Salazar"
+                   class="w-full px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-white text-xs focus:outline-none focus:border-sky-500">
+          </div>
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1">Color orbital:</label>
+              <select x-model="authForm.regColor" class="w-full px-2 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-white text-xs focus:outline-none">
+                <option value="#0ea5e9">Azul acero</option>
+                <option value="#0284c7">Cian profundo</option>
+                <option value="#059669">Verde esmeralda</option>
+                <option value="#d97706">Ámbar cálido</option>
+                <option value="#475569">Gris corporativo</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1">Canal:</label>
+              <select x-model="authForm.regCanal" class="w-full px-2 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-white text-xs focus:outline-none">
+                <option value="texto">Texto y notas</option>
+                <option value="voz">Voz en llamada</option>
+              </select>
+            </div>
+          </div>
+          <button type="submit" :disabled="cargandoAuth"
+                  class="w-full py-2.5 rounded-lg bg-sky-600 hover:bg-sky-500 font-semibold text-white text-xs shadow transition mt-2 disabled:opacity-50">
+            <span x-text="cargandoAuth ? 'Registrando cuenta...' : 'Registrar cuenta y acceder'"></span>
+          </button>
+        </form>
+      </div>
+    </section>
+
+    <!-- 3. PANTALLA: LOBBY DE SALAS Y REUNIONES PENDIENTES -->
+    <section x-show="vista === 'salas'" class="max-w-3xl w-full mx-auto" x-transition>
+      <div class="flex items-center justify-between mb-5">
+        <div>
+          <h2 class="text-xl font-bold text-white">Mis reuniones y deliberaciones</h2>
+          <p class="text-xs text-slate-400">Accede a tus sesiones programadas, planifica tus intervenciones o crea una nueva sala.</p>
+        </div>
+        <div class="flex gap-2">
+          <button class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-slate-200 border border-slate-700 transition flex items-center gap-1.5"
+                  @click="mostrarModalGuardarEnlace = true">
+            <i data-lucide="bookmark-plus" class="w-3.5 h-3.5"></i>
+            <span>Guardar enlace</span>
+          </button>
+          <button class="px-3.5 py-1.5 rounded-lg bg-sky-600 hover:bg-sky-500 text-xs font-semibold text-white transition flex items-center gap-1.5"
+                  @click="navegarA('crear')">
+            <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+            <span>Nueva sala</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Barra rápida de acceso por código -->
+      <div class="tarjeta-vidrio rounded-xl p-3 mb-6 flex gap-2.5">
+        <input type="text" x-ref="inputCodigo" placeholder="Código de sala (ej. ORB-4821)"
+               class="flex-1 px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-white uppercase text-xs focus:outline-none focus:border-sky-500 font-mono">
+        <button class="px-4 py-1.5 rounded-lg bg-sky-600 hover:bg-sky-500 text-white font-semibold text-xs transition"
+                @click="ingresarASala($refs.inputCodigo.value.trim())">
+          Conectar
+        </button>
+      </div>
+
+      <!-- Listado de reuniones programadas y guardadas -->
+      <div class="space-y-3">
+        <div class="flex items-center justify-between">
+          <h3 class="text-xs font-bold uppercase tracking-wider text-slate-300">Reuniones registradas en tu cuenta:</h3>
+          <button @click="cargarMisReuniones()" class="text-xs text-sky-400 hover:text-sky-300 flex items-center gap-1">
+            <i data-lucide="refresh-cw" class="w-3 h-3"></i>
+            <span>Actualizar</span>
+          </button>
+        </div>
+
+        <template x-if="misReuniones.length === 0">
+          <div class="p-8 text-center rounded-xl bg-slate-900/40 border border-slate-800 text-slate-400 text-xs">
+            No tienes reuniones pendientes o programadas aún. Crea una sala o guarda un enlace para planificar tu participación.
+          </div>
+        </template>
+
+        <div class="grid gap-3 sm:grid-cols-2">
+          <template x-for="reu in misReuniones" :key="reu.codigo">
+            <div class="tarjeta-vidrio rounded-xl p-4 flex flex-col justify-between border border-slate-800 hover:border-slate-700 transition">
+              <div>
+                <div class="flex items-center justify-between mb-2">
+                  <span class="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-slate-800 text-sky-400 border border-slate-700"
+                        x-text="reu.codigo"></span>
+                  <span class="text-[10px] px-2 py-0.5 rounded text-amber-400 bg-amber-950/40 border border-amber-900/50"
+                        x-text="reu.fecha_programada || 'Horario flexible'"></span>
+                </div>
+                <h4 class="font-bold text-white text-sm mb-1 leading-snug" x-text="reu.nombre"></h4>
+                <p class="text-[11px] text-slate-400 mb-3" x-show="reu.anfitrion_nombre">
+                  Anfitrión: <strong class="text-slate-300" x-text="reu.anfitrion_nombre"></strong>
+                </p>
+              </div>
+
+              <div class="pt-2 border-t border-slate-800 flex items-center justify-between gap-1 text-xs">
+                <div class="flex gap-1">
+                  <button @click="copiarCodigoReunion(reu.codigo)" title="Copiar código"
+                          class="p-1.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition">
+                    <i data-lucide="copy" class="w-3.5 h-3.5"></i>
+                  </button>
+                  <button @click="copiarEnlaceReunion(reu.codigo)" title="Compartir enlace completo"
+                          class="p-1.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition">
+                    <i data-lucide="share-2" class="w-3.5 h-3.5"></i>
+                  </button>
+                  <button @click="abrirPlanificarSpeech(reu)" title="Planificar speech / notas"
+                          class="px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-sky-400 hover:text-sky-300 text-[11px] font-medium transition flex items-center gap-1">
+                    <i data-lucide="mic" class="w-3 h-3"></i>
+                    <span>Speech</span>
+                  </button>
+                </div>
+                <button @click="ingresarASala(reu.codigo)"
+                        class="px-3 py-1 rounded bg-sky-600 hover:bg-sky-500 font-semibold text-white text-[11px] transition flex items-center gap-1">
+                  <span>Ingresar</span>
+                  <i data-lucide="arrow-right" class="w-3 h-3"></i>
+                </button>
+              </div>
+            </div>
+          </template>
+        </div>
+      </div>
+    </section>
+
+    <!-- 4. PANTALLA: CREAR SALA -->
+    <section x-show="vista === 'crear'" class="max-w-md w-full mx-auto" x-transition>
+      <div class="tarjeta-vidrio rounded-2xl p-6">
+        <h2 class="text-lg font-bold text-white mb-1.5">Crear sala de deliberación</h2>
+        <p class="text-xs text-slate-400 mb-5">Define la agenda base para estructurar los tiempos de participación.</p>
+
+        <form @submit.prevent="crearSala($refs.crearNombre.value, $refs.crearAgenda.value, 'suave')" class="space-y-3.5">
+          <div>
+            <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1">Nombre de la sesión:</label>
+            <input type="text" x-ref="crearNombre" required placeholder="Ej. Revisión de Arquitectura de Sistemas"
+                   class="w-full px-3 py-2 rounded-lg bg-slate-900 border border-slate-700 text-white focus:outline-none focus:border-sky-500 text-xs">
+          </div>
+
+          <div>
+            <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1">Fecha u horario programado (opcional):</label>
+            <input type="text" x-model="fechaProgramadaInput" placeholder="Ej. Hoy 15:00 hrs o 2026-11-20 10:00"
+                   class="w-full px-3 py-2 rounded-lg bg-slate-900 border border-slate-700 text-white focus:outline-none focus:border-sky-500 text-xs">
+          </div>
+
+          <div>
+            <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1">Agenda inicial (un punto por línea):</label>
+            <textarea x-ref="crearAgenda" rows="3" required class="w-full px-3 py-2 rounded-lg bg-slate-900 border border-slate-700 text-white focus:outline-none focus:border-sky-500 text-xs">Alineación y contexto inicial
+Discusión de propuestas
+Acuerdos y cierre</textarea>
+          </div>
+
+          <div class="flex gap-2.5 pt-2">
+            <button type="button" class="w-1/3 py-2 rounded-lg bg-slate-800 text-slate-300 text-xs hover:text-white" @click="navegarA('salas')">
+              Cancelar
+            </button>
+            <button type="submit" class="w-2/3 py-2 rounded-lg bg-sky-600 hover:bg-sky-500 font-semibold text-white text-xs">
+              Crear sala
+            </button>
+          </div>
+        </form>
+      </div>
+    </section>
+
+    <!-- 4.1 PANTALLA: PLANIFICACIÓN DE SPEECH Y NOTAS PREVIAS -->
+    <section x-show="vista === 'speech'" class="max-w-2xl w-full mx-auto" x-transition>
+      <div class="tarjeta-vidrio rounded-2xl p-6">
+        <div class="flex items-center justify-between border-b border-slate-800 pb-3 mb-4">
+          <div>
+            <span class="text-[11px] font-bold text-sky-400 uppercase tracking-wider">Planificación previa de intervención</span>
+            <h2 class="text-lg font-bold text-white mt-0.5" x-text="reunionSeleccionadaPlan ? reunionSeleccionadaPlan.nombre : 'Reunión'"></h2>
+            <p class="text-xs text-slate-400">Código de sesión: <span class="text-sky-300 font-mono font-bold" x-text="reunionSeleccionadaPlan ? reunionSeleccionadaPlan.codigo : ''"></span></p>
+          </div>
+          <button @click="navegarA('salas')" class="text-xs px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300">
+            Volver a salas
+          </button>
+        </div>
+
+        <div class="space-y-4">
+          <div>
+            <div class="flex items-center justify-between mb-1.5">
+              <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider">
+                Tu speech, argumentos y notas de intervención:
+              </label>
+              <div class="flex items-center gap-2">
+                <button type="button" @click="alternarDictadoPorVoz('speech')"
+                        class="px-2 py-0.5 rounded text-[11px] font-medium transition flex items-center gap-1 border"
+                        :class="dictandoEn === 'speech' ? 'bg-rose-500/20 border-rose-500/50 text-rose-300 animate-pulse' : 'bg-slate-800 border-slate-700 text-slate-300 hover:text-white'">
+                  <i data-lucide="mic" class="w-3 h-3"></i>
+                  <span x-text="dictandoEn === 'speech' ? 'Escuchando...' : 'Dictar por voz'"></span>
+                </button>
+                <span class="text-[11px] text-sky-400 font-semibold flex items-center gap-1">
+                  <i data-lucide="sparkles" class="w-3.5 h-3.5"></i>
+                  <span>Gemini Flash</span>
+                </span>
+              </div>
+            </div>
+            <p class="text-[11px] text-slate-400 mb-2">
+              Escribe tus ideas clave o pide al agente que redacte y optimice una propuesta estructurada.
+            </p>
+            <textarea x-model="speechPlanTexto" rows="6" placeholder="Escribe aquí tu discurso, argumentos centrales, datos de respaldo o propuestas que deseas plantear en la reunión..."
+                      class="w-full px-3 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white focus:outline-none focus:border-sky-500 text-xs leading-relaxed font-sans"></textarea>
+          </div>
+
+          <!-- Acciones de asistencia con IA para speech -->
+          <div class="p-3 rounded-xl bg-slate-900/60 border border-slate-800 space-y-2.5">
+            <span class="text-[10px] font-bold uppercase tracking-wider text-amber-400 block">
+              Optimización con agente de inteligencia artificial:
+            </span>
+            <div class="flex flex-wrap gap-1.5">
+              <button @click="asistirSpeechConIa('Estructurar propuesta en 3 puntos claros y concisos')"
+                      :disabled="cargandoIaSpeech"
+                      class="px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-[11px] transition">
+                3 puntos claros
+              </button>
+              <button @click="asistirSpeechConIa('Hacer el discurso más ejecutivo, persuasivo y breve')"
+                      :disabled="cargandoIaSpeech"
+                      class="px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-[11px] transition">
+                Más ejecutivo y breve
+              </button>
+              <button @click="asistirSpeechConIa('Redactar apertura y propuesta constructiva desde cero')"
+                      :disabled="cargandoIaSpeech"
+                      class="px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-[11px] transition">
+                Generar borrador nuevo
+              </button>
+            </div>
+
+            <div class="flex gap-1.5 pt-1">
+              <input type="text" x-model="solicitudIaSpeechInput" placeholder="O escribe una instrucción específica para la IA..."
+                     class="flex-1 px-2.5 py-1.5 bg-slate-950 border border-slate-800 rounded-lg text-xs text-white focus:outline-none focus:border-sky-500">
+              <button type="button" @click="alternarDictadoPorVoz('speech_instruccion')"
+                      class="px-2 py-1.5 rounded-lg border text-xs transition"
+                      :class="dictandoEn === 'speech_instruccion' ? 'bg-rose-500/20 border-rose-500/50 text-rose-300 animate-pulse' : 'bg-slate-800 border-slate-700 text-slate-400 hover:text-white'"
+                      title="Dictar instrucción por voz">
+                <i data-lucide="mic" class="w-3.5 h-3.5"></i>
+              </button>
+              <button @click="asistirSpeechConIa()" :disabled="cargandoIaSpeech"
+                      class="px-3 py-1.5 bg-sky-600 hover:bg-sky-500 text-white rounded-lg text-xs font-semibold flex items-center gap-1 disabled:opacity-50">
+                <i data-lucide="sparkles" class="w-3.5 h-3.5"></i>
+                <span x-text="cargandoIaSpeech ? 'Procesando...' : 'Asistir'"></span>
+              </button>
+            </div>
+
+            <!-- Sugerencia y optimización generada por la IA -->
+            <template x-if="resultadoIaSpeech">
+              <div class="mt-2.5 p-3 rounded-lg bg-sky-950/40 border border-sky-800/60 text-xs space-y-2">
+                <div class="flex items-center justify-between">
+                  <strong class="text-sky-300 text-xs">Propuesta generada por la IA:</strong>
+                  <button @click="aplicarSpeechOptimizado()"
+                          class="px-2.5 py-0.5 rounded bg-sky-600 hover:bg-sky-500 text-white font-semibold text-[10px] transition">
+                    Adoptar en mi borrador
+                  </button>
+                </div>
+                <p class="text-slate-200 text-xs leading-relaxed whitespace-pre-line" x-text="resultadoIaSpeech.speech_optimizado"></p>
+                <template x-if="resultadoIaSpeech.consejo_oratoria">
+                  <p class="text-[11px] text-amber-300 italic pt-1 border-t border-sky-900/60" x-text="`Consejo: ${resultadoIaSpeech.consejo_oratoria}`"></p>
+                </template>
+              </div>
+            </template>
+          </div>
+
+          <div class="flex items-center justify-between pt-2 border-t border-slate-800">
+            <span class="text-[11px] text-slate-500">Guardado persistente en SQLite</span>
+            <div class="flex gap-2">
+              <button @click="navegarA('salas')" class="px-3.5 py-1.5 rounded-lg bg-slate-800 text-slate-300 text-xs hover:text-white">
+                Cancelar
+              </button>
+              <button @click="guardarSpeech()" :disabled="guardandoSpeech"
+                      class="px-4 py-1.5 rounded-lg bg-sky-600 hover:bg-sky-500 font-semibold text-white text-xs transition flex items-center gap-1.5">
+                <i data-lucide="save" class="w-3.5 h-3.5"></i>
+                <span x-text="guardandoSpeech ? 'Guardando...' : 'Guardar speech'"></span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 5. PANTALLA: SALA DE ESPERA (P12) CON ADICIÓN DE AGENDA -->
+    <section x-show="vista === 'espera'" class="max-w-2xl w-full mx-auto" x-transition>
+      <div class="tarjeta-vidrio rounded-2xl p-6">
+        <div class="flex items-center justify-between border-b border-slate-800 pb-3.5 mb-5">
+          <div>
+            <span class="text-[11px] font-bold text-amber-500 uppercase tracking-wider">Sala de espera (P12)</span>
+            <h2 class="text-xl font-bold text-white mt-0.5" x-text="salaActual ? salaActual.nombre : 'Sala'"></h2>
+            <p class="text-xs text-slate-400 mt-0.5">Código de acceso: <span class="text-sky-400 font-mono font-bold" x-text="salaActual ? salaActual.codigo : ''"></span></p>
+          </div>
+          <button class="px-4 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs transition flex items-center gap-1.5"
+                  @click="navegarA('reunion')">
+            <span>Ingresar a la reunión</span>
+            <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>
+          </button>
+        </div>
+
+        <div class="flex items-center justify-between mb-2.5">
+          <h3 class="text-xs font-semibold text-slate-300 uppercase tracking-wider">Agenda de la sesión:</h3>
+          <button @click="mostrarAgregarTema = !mostrarAgregarTema" class="text-xs font-semibold text-sky-400 hover:text-sky-300 flex items-center gap-1">
+            <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+            <span>Añadir tema</span>
+          </button>
+        </div>
+
+        <!-- Formulario desplegable para nuevo tema -->
+        <div x-show="mostrarAgregarTema" x-transition class="mb-3 p-2.5 rounded-lg bg-slate-900 border border-slate-700 flex gap-2">
+          <input type="text" x-model="nuevoTemaInput" placeholder="Nuevo tema de deliberación..."
+                 class="flex-1 px-2.5 py-1 bg-slate-950 border border-slate-800 rounded text-xs text-white focus:outline-none">
+          <button @click="agregarTema()" class="px-3 py-1 bg-sky-600 text-white rounded text-xs font-semibold">
+            Guardar
+          </button>
+        </div>
+
+        <div class="space-y-2 mb-4">
+          <template x-for="(tema, idx) in (salaActual ? salaActual.agenda : [])" :key="tema.id">
+            <div class="p-3 rounded-lg bg-slate-900/50 border border-slate-800 flex items-center justify-between text-xs">
+              <div>
+                <span class="text-[10px] text-sky-400 font-semibold" x-text="`Tema ${idx + 1}`"></span>
+                <h4 class="text-xs font-semibold text-white" x-text="tema.titulo"></h4>
+              </div>
+            </div>
+          </template>
+        </div>
+      </div>
+    </section>
+
+    <!-- 6. PANTALLA: REUNIÓN EN VIVO (CHAT GRUPAL + CHAT CON AGENTE + FORMATO DE APORTE EDITABLE) -->
+    <section x-show="vista === 'reunion'" class="w-full flex-1 flex flex-col h-[calc(100vh-4.5rem)]" x-transition>
+
+      <!-- Barra de navegación contextual de la reunión -->
+      <div class="flex items-center justify-between mb-2.5 px-1">
+        <div class="flex items-center gap-2">
+          <!-- Botón de panel lateral -->
+          <button @click="panelLateralAbierto = !panelLateralAbierto"
+                  class="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs flex items-center gap-1.5 border border-slate-700">
+            <i data-lucide="sidebar" class="w-3.5 h-3.5"></i>
+            <span x-text="panelLateralAbierto ? 'Ocultar panel' : 'Mostrar panel'"></span>
+          </button>
+
+          <!-- Alternar vista central: Radar vs Aportes Oficiales -->
+          <div class="flex rounded-lg bg-slate-900 border border-slate-800 p-0.5 text-xs">
+            <button class="px-2.5 py-1 rounded-md transition"
+                    :class="pestañaCentro === 'radar' ? 'bg-sky-600 text-white font-semibold' : 'text-slate-400 hover:text-white'"
+                    @click="pestañaCentro = 'radar'">
+              Radar orbital
+            </button>
+            <button class="px-2.5 py-1 rounded-md transition"
+                    :class="pestañaCentro === 'aportes' ? 'bg-sky-600 text-white font-semibold' : 'text-slate-400 hover:text-white'"
+                    @click="pestañaCentro = 'aportes'">
+              Aportes oficiales
+            </button>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-2 text-xs">
+          <!-- Botones de copiar código y enlace de reunión -->
+          <div class="flex items-center gap-1 bg-slate-900/80 px-2 py-1 rounded-lg border border-slate-800">
+            <span class="font-mono text-sky-400 font-bold" x-text="salaActual ? salaActual.codigo : ''"></span>
+            <button @click="copiarCodigoReunion(salaActual.codigo)" title="Copiar código de reunión"
+                    class="p-1 rounded hover:bg-slate-800 text-slate-400 hover:text-white transition">
+              <i data-lucide="copy" class="w-3 h-3"></i>
+            </button>
+            <button @click="copiarEnlaceReunion(salaActual.codigo)" title="Copiar enlace directo"
+                    class="p-1 rounded hover:bg-slate-800 text-slate-400 hover:text-white transition">
+              <i data-lucide="share-2" class="w-3 h-3"></i>
+            </button>
+          </div>
+
+          <div class="hidden sm:flex items-center gap-1.5 bg-slate-900/80 px-2.5 py-1 rounded-lg border border-slate-800">
+            <span class="text-amber-400 font-bold">Tema:</span>
+            <span class="text-slate-200" x-text="salaActual && salaActual.tema_activo ? salaActual.tema_activo.titulo : 'General'"></span>
+          </div>
+          <div class="flex items-center gap-1.5 bg-slate-900/80 px-2.5 py-1 rounded-lg border border-slate-800">
+            <span class="text-sky-400 font-bold">Balance:</span>
+            <span class="text-slate-100 font-bold" x-text="`${salaActual ? salaActual.indice_equilibrio : 100}%`"></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Área de deliberación en 2 paneles -->
+      <div class="grid gap-3 flex-1 overflow-hidden" :class="panelLateralAbierto ? 'grid-cols-1 lg:grid-cols-3' : 'grid-cols-1'">
+
+        <!-- Panel central principal -->
+        <div class="tarjeta-vidrio rounded-xl p-3 flex flex-col items-center justify-center relative overflow-hidden"
+             :class="panelLateralAbierto ? 'lg:col-span-2' : 'col-span-1'">
+
+          <!-- Vista 1: Radar Orbital D3 -->
+          <div x-show="pestañaCentro === 'radar'" class="w-full h-full flex items-center justify-center relative">
+            <div id="lienzo-orbital" class="w-full max-w-[450px] aspect-square flex items-center justify-center"></div>
+
+            <!-- Ficha contextual de participante en radar -->
+            <template x-if="fichaParticipante">
+              <div class="absolute bottom-3 bg-slate-900/95 border border-slate-700 rounded-xl p-3 shadow-2xl backdrop-blur-md max-w-xs w-full text-xs">
+                <div class="flex items-center justify-between mb-1.5">
+                  <div class="flex items-center gap-2">
+                    <span class="w-2.5 h-2.5 rounded-full" :style="`background-color: ${fichaParticipante.color || '#38bdf8'}`"></span>
+                    <strong class="text-white text-xs" x-text="fichaParticipante.nombre"></strong>
+                  </div>
+                  <button class="text-slate-400 hover:text-white" @click="fichaParticipante = null">✕</button>
+                </div>
+
+                <div class="space-y-1 mb-2.5 text-slate-300">
+                  <p class="text-[11px] flex justify-between">
+                    <span>Participación relativa:</span>
+                    <strong class="text-sky-400 font-bold" x-text="`${Math.round((fichaParticipante.share || 0)*100)}%`"></strong>
+                  </p>
+                  <p class="text-[11px] flex justify-between" x-show="fichaParticipante.es_anfitrion">
+                    <span class="text-amber-400 font-semibold">Rol en la sala:</span>
+                    <span class="px-1.5 py-0.2 rounded bg-amber-950/60 border border-amber-800 text-amber-300 text-[10px]">Anfitrión</span>
+                  </p>
+                </div>
+
+                <!-- Botón de invitar a participar: EXCLUSIVO si el usuario actual es anfitrión y no es él mismo -->
+                <template x-if="esAnfitrion() && usuario && fichaParticipante.id !== usuario.id">
+                  <button class="w-full py-1.5 rounded-lg bg-sky-600 hover:bg-sky-500 font-semibold text-white text-xs transition flex items-center justify-center gap-1.5 shadow"
+                          @click="invitarParticipanteSeleccionado(fichaParticipante)">
+                    <i data-lucide="user-plus" class="w-3.5 h-3.5"></i>
+                    <span>Invitar a participar</span>
+                  </button>
+                </template>
+
+                <template x-if="!esAnfitrion() && usuario && fichaParticipante.id !== usuario.id">
+                  <div class="text-[11px] text-slate-400 text-center py-1 bg-slate-950/50 rounded border border-slate-800/80">
+                    Participante activo en la sala
+                  </div>
+                </template>
+              </div>
+            </template>
+          </div>
+
+          <!-- Vista 2: Aportes Oficiales Publicados (Formato legible con Accordion colapsable) -->
+          <div x-show="pestañaCentro === 'aportes'" class="w-full h-full flex flex-col p-2 overflow-y-auto">
+            <div class="flex items-center justify-between mb-2.5 border-b border-slate-800 pb-2">
+              <div>
+                <h3 class="text-xs font-bold uppercase tracking-wider text-slate-300">Aportes y propuestas oficiales</h3>
+                <span class="text-[11px] text-slate-400">Despliega o contrae cada aporte para revisar sus puntos de acción</span>
+              </div>
+              <button @click="pestañaLateral = 'agente'; panelLateralAbierto = true;" class="text-xs text-sky-400 hover:text-sky-300 font-semibold flex items-center gap-1">
+                <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+                <span>Redactar propuesta con IA</span>
+              </button>
+            </div>
+
+            <!-- Listado con acordeón colapsable -->
+            <div class="space-y-2 flex-1 overflow-y-auto pr-1">
+              <template x-if="!salaActual || !salaActual.transcripcion || salaActual.transcripcion.length === 0">
+                <div class="p-6 text-center text-slate-400 text-xs bg-slate-900/30 rounded-xl border border-slate-800">
+                  No hay aportes oficiales publicados todavía. Redacta tu propuesta con el agente en el panel lateral.
+                </div>
+              </template>
+
+              <template x-for="item in (salaActual ? salaActual.transcripcion : [])" :key="item.id">
+                <div class="rounded-xl bg-slate-900/70 border border-slate-800 transition overflow-hidden">
+                  <!-- Cabecera del acordeón -->
+                  <div class="p-3 cursor-pointer flex items-center justify-between hover:bg-slate-800/40 select-none"
+                       @click="alternarDespliegueAporte(item.id)">
+                    <div class="flex items-center gap-2.5 flex-1 min-w-0 pr-2">
+                      <div class="w-2 h-2 rounded-full flex-shrink-0" :style="`background-color: ${item.color || '#38bdf8'}`"></div>
+                      <div class="min-w-0">
+                        <span class="font-bold text-white text-xs block truncate" x-text="item.titulo || 'Aporte deliberativo'"></span>
+                        <span class="text-[11px] text-slate-400" x-text="`${item.nombre} · ${new Date(item.timestamp * 1000).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}`"></span>
+                      </div>
+                    </div>
+
+                    <div class="flex items-center gap-2 flex-shrink-0">
+                      <span x-show="item.impacto_estimado" class="px-2 py-0.5 rounded bg-slate-800 text-[10px] text-sky-300 font-medium border border-slate-700"
+                            x-text="`Impacto ${item.impacto_estimado}`"></span>
+                      <i data-lucide="chevron-down" class="w-4 h-4 text-slate-400 transition-transform duration-200"
+                         :class="aporteDesplegadoId === item.id ? 'rotate-180 text-sky-400' : ''"></i>
+                    </div>
+                  </div>
+
+                  <!-- Cuerpo colapsable -->
+                  <div x-show="aporteDesplegadoId === item.id" x-collapse class="px-3 pb-3 pt-1 border-t border-slate-800/80 text-xs">
+                    <p class="text-slate-200 leading-relaxed mb-3 whitespace-pre-line" x-text="item.texto"></p>
+
+                    <!-- Puntos clave si existen -->
+                    <template x-if="item.puntos_clave && item.puntos_clave.length > 0">
+                      <div class="mt-2.5 pt-2 border-t border-slate-800/60">
+                        <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1.5">Puntos clave y acciones:</span>
+                        <ul class="space-y-1 pl-1">
+                          <template x-for="(pt, pIdx) in item.puntos_clave" :key="pIdx">
+                            <li class="text-[11px] text-slate-300 flex items-start gap-1.5">
+                              <span class="text-sky-400 font-bold">•</span>
+                              <span x-text="pt"></span>
+                            </li>
+                          </template>
+                        </ul>
+                      </div>
+                    </template>
+                  </div>
+                </div>
+              </template>
+            </div>
+          </div>
+        </div>
+
+        <!-- Panel lateral colapsable (Nivel 1: Pestañas / Nivel 2: Contenido) -->
+        <div x-show="panelLateralAbierto" x-transition
+             class="tarjeta-vidrio rounded-xl flex flex-col overflow-hidden h-full">
+
+          <!-- Pestañas Nivel 1 -->
+          <div class="flex border-b border-slate-800 bg-slate-900/60">
+            <button class="flex-1 py-2 text-xs font-bold uppercase tracking-wider text-center border-b-2 transition flex items-center justify-center gap-1.5"
+                    :class="pestañaLateral === 'chat' ? 'border-sky-500 text-sky-400 bg-slate-800/40' : 'border-transparent text-slate-400 hover:text-white'"
+                    @click="pestañaLateral = 'chat'">
+              <i data-lucide="message-square" class="w-3.5 h-3.5"></i>
+              <span>Chat</span>
+            </button>
+            <button class="flex-1 py-2 text-xs font-bold uppercase tracking-wider text-center border-b-2 transition flex items-center justify-center gap-1.5"
+                    :class="pestañaLateral === 'agente' ? 'border-sky-500 text-sky-400 bg-slate-800/40' : 'border-transparent text-slate-400 hover:text-white'"
+                    @click="pestañaLateral = 'agente'">
+              <i data-lucide="sparkles" class="w-3.5 h-3.5"></i>
+              <span>Agente</span>
+            </button>
+            <button class="flex-1 py-2 text-xs font-bold uppercase tracking-wider text-center border-b-2 transition flex items-center justify-center gap-1.5"
+                    :class="pestañaLateral === 'speech' ? 'border-sky-500 text-sky-400 bg-slate-800/40' : 'border-transparent text-slate-400 hover:text-white'"
+                    @click="pestañaLateral = 'speech'">
+              <i data-lucide="file-text" class="w-3.5 h-3.5"></i>
+              <span>Mi speech</span>
+            </button>
+            <button class="flex-1 py-2 text-xs font-bold uppercase tracking-wider text-center border-b-2 transition flex items-center justify-center gap-1.5"
+                    :class="pestañaLateral === 'agenda' ? 'border-sky-500 text-sky-400 bg-slate-800/40' : 'border-transparent text-slate-400 hover:text-white'"
+                    @click="pestañaLateral = 'agenda'">
+              <i data-lucide="list-ordered" class="w-3.5 h-3.5"></i>
+              <span>Agenda</span>
+            </button>
+          </div>
+
+          <!-- Contenido Nivel 2 -->
+
+          <!-- 1. CHAT GRUPAL (Interacción libre entre todos) -->
+          <div x-show="pestañaLateral === 'chat'" class="flex-1 flex flex-col p-2.5 overflow-hidden">
+            <div id="contenedor-mensajes-chat" class="flex-1 overflow-y-auto space-y-2 mb-2 pr-1 text-xs">
+              <template x-for="msg in (salaActual ? salaActual.chat_grupal : [])" :key="msg.id">
+                <div class="p-2 rounded-lg bg-slate-900/60 border border-slate-800/60">
+                  <span class="font-bold block text-[11px]" :style="`color: ${msg.color}`" x-text="msg.nombre"></span>
+                  <span class="text-slate-200" x-text="msg.texto"></span>
+                </div>
+              </template>
+            </div>
+            <form @submit.prevent="enviarMensajeChatGrupal()" class="flex gap-1.5">
+              <input type="text" x-model="mensajeChatInput" placeholder="Mensaje para el equipo..."
+                     class="flex-1 px-2.5 py-1.5 bg-slate-900 border border-slate-700 rounded-lg text-xs text-white focus:outline-none focus:border-sky-500">
+              <button type="button" @click="alternarDictadoPorVoz('chat')"
+                      class="px-2 py-1.5 rounded-lg border text-xs transition"
+                      :class="dictandoEn === 'chat' ? 'bg-rose-500/20 border-rose-500/50 text-rose-300 animate-pulse' : 'bg-slate-800 border-slate-700 text-slate-400 hover:text-white'"
+                      title="Dictar mensaje por voz">
+                <i data-lucide="mic" class="w-3.5 h-3.5"></i>
+              </button>
+              <button type="submit" class="p-1.5 bg-sky-600 hover:bg-sky-500 text-white rounded-lg">
+                <i data-lucide="send" class="w-3.5 h-3.5"></i>
+              </button>
+            </form>
+          </div>
+
+          <!-- 2. AGENTE DE IA (Chat simple + Formato de aporte estructurado editable) -->
+          <div x-show="pestañaLateral === 'agente'" class="flex-1 flex flex-col p-2.5 overflow-hidden">
+
+            <!-- Subvista A: Chat normal con el agente -->
+            <div x-show="!modoFormatoAporte" class="flex-1 flex flex-col overflow-hidden">
+              <div class="text-[11px] text-sky-400 font-semibold mb-1.5 flex items-center justify-between border-b border-slate-800 pb-1">
+                <span>Diálogo confidencial con el agente</span>
+                <button @click="generarFormatoDesdeChat()" :disabled="cargandoFormatoAporte"
+                        class="px-2 py-0.5 rounded bg-sky-950 border border-sky-800 text-sky-300 hover:text-white text-[10px] flex items-center gap-1 font-medium">
+                  <i data-lucide="file-edit" class="w-3 h-3"></i>
+                  <span>Generar formato de aporte</span>
+                </button>
+              </div>
+
+              <!-- Mensajes del chat con el agente -->
+              <div id="contenedor-chat-agente" class="flex-1 overflow-y-auto space-y-2 mb-2 pr-1 text-xs">
+                <div class="p-2 rounded-lg bg-slate-900 border border-slate-800 text-slate-300">
+                  Hola, soy tu asistente de deliberación. Tomo en cuenta el tema actual y los aportes publicados. Conversemos para estructurar tu propuesta.
+                </div>
+                <template x-for="(ch, idx) in historialChatAgente" :key="idx">
+                  <div class="p-2 rounded-lg text-xs leading-relaxed"
+                       :class="ch.rol === 'user' ? 'bg-slate-800/80 border border-slate-700 text-slate-200 ml-4' : 'bg-slate-900 border border-sky-900/60 text-sky-200 mr-4'">
+                    <span class="font-bold text-[10px] block text-slate-400 mb-0.5" x-text="ch.rol === 'user' ? 'Tú' : 'Agente'"></span>
+                    <span x-text="ch.contenido"></span>
+                  </div>
+                </template>
+              </div>
+
+              <!-- Formulario de chat simple con opción de voz -->
+              <form @submit.prevent="enviarMensajeAgente()" class="flex gap-1.5">
+                <input type="text" x-model="mensajeAgenteInput" placeholder="Pregunta o debate una idea con el agente..."
+                       class="flex-1 px-2.5 py-1.5 bg-slate-900 border border-slate-700 rounded-lg text-xs text-white focus:outline-none focus:border-sky-500">
+                <button type="button" @click="alternarDictadoPorVoz('agente')"
+                        class="px-2 py-1.5 rounded-lg border text-xs transition"
+                        :class="dictandoEn === 'agente' ? 'bg-rose-500/20 border-rose-500/50 text-rose-300 animate-pulse' : 'bg-slate-800 border-slate-700 text-slate-400 hover:text-white'"
+                        title="Dictar al agente por voz">
+                  <i data-lucide="mic" class="w-3.5 h-3.5"></i>
+                </button>
+                <button type="submit" :disabled="cargandoAgente" class="p-1.5 bg-sky-600 hover:bg-sky-500 text-white rounded-lg disabled:opacity-50">
+                  <i data-lucide="sparkles" class="w-3.5 h-3.5"></i>
+                </button>
+              </form>
+            </div>
+
+            <!-- Subvista B: Formato de aporte editable antes de ser publicado -->
+            <div x-show="modoFormatoAporte" class="flex-1 flex flex-col overflow-y-auto space-y-2.5 text-xs">
+              <div class="flex items-center justify-between border-b border-slate-800 pb-1.5">
+                <span class="font-bold text-sky-400 text-xs">Formato de aporte editable</span>
+                <button @click="modoFormatoAporte = false" class="text-slate-400 hover:text-white text-[11px]">✕ Volver al chat</button>
+              </div>
+
+              <div>
+                <label class="block text-[11px] font-semibold text-slate-300 uppercase mb-1">Título de la propuesta:</label>
+                <input type="text" x-model="formatoAporteBorrador.titulo"
+                       class="w-full px-2.5 py-1.5 bg-slate-900 border border-slate-700 rounded text-xs text-white focus:outline-none focus:border-sky-500">
+              </div>
+
+              <div>
+                <label class="block text-[11px] font-semibold text-slate-300 uppercase mb-1">Contenido / Justificación:</label>
+                <textarea x-model="formatoAporteBorrador.contenido" rows="3"
+                          class="w-full px-2.5 py-1.5 bg-slate-900 border border-slate-700 rounded text-xs text-white focus:outline-none focus:border-sky-500"></textarea>
+              </div>
+
+              <div>
+                <label class="block text-[11px] font-semibold text-slate-300 uppercase mb-1">Puntos clave / Acciones:</label>
+                <div class="space-y-1 mb-1.5">
+                  <template x-for="(pt, pIdx) in formatoAporteBorrador.puntos_clave" :key="pIdx">
+                    <div class="flex items-center justify-between p-1.5 bg-slate-900 rounded border border-slate-800 text-[11px]">
+                      <span class="text-slate-200" x-text="pt"></span>
+                      <button @click="eliminarPuntoClave(pIdx)" class="text-rose-400 hover:text-rose-300 text-xs">✕</button>
+                    </div>
+                  </template>
+                </div>
+                <div class="flex gap-1.5">
+                  <input type="text" x-model="nuevoPuntoClaveInput" placeholder="Añadir punto medible..."
+                         class="flex-1 px-2 py-1 bg-slate-900 border border-slate-800 rounded text-[11px] text-white">
+                  <button @click="agregarPuntoClave()" class="px-2 py-1 bg-slate-800 text-slate-300 rounded text-[11px]">
+                    +
+                  </button>
+                </div>
+              </div>
+
+              <!-- Evaluación u observaciones del agente -->
+              <template x-if="evaluacionIaFormato">
+                <div class="p-2.5 rounded-lg bg-sky-950/40 border border-sky-800/60 text-xs">
+                  <span class="font-bold text-sky-400 text-[11px] block mb-0.5">Observación del Agente:</span>
+                  <p class="text-slate-300 text-[11px] mb-2" x-text="evaluacionIaFormato.evaluacion"></p>
+                  <template x-if="evaluacionIaFormato.sugerencia_mejora && evaluacionIaFormato.sugerencia_mejora !== formatoAporteBorrador.contenido">
+                    <div>
+                      <span class="text-[10px] text-slate-400 block mb-0.5">Texto sugerido mejorado:</span>
+                      <p class="text-sky-200 text-[11px] italic mb-1.5" x-text="evaluacionIaFormato.sugerencia_mejora"></p>
+                      <button @click="aplicarSugerenciaIaEnBorrador()" class="px-2 py-0.5 rounded bg-sky-600 text-white text-[10px]">
+                        Adoptar sugerencia en mi borrador
+                      </button>
+                    </div>
+                  </template>
+                </div>
+              </template>
+
+              <!-- Botones de validación y publicación explícita -->
+              <div class="flex gap-2 pt-2 border-t border-slate-800">
+                <button @click="solicitarRevisionAgente()" :disabled="cargandoFormatoAporte"
+                        class="flex-1 py-1.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-medium border border-slate-700">
+                  Solicitar validación al agente
+                </button>
+                <button @click="publicarAporteOficial()"
+                        class="flex-1 py-1.5 rounded bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold">
+                  Publicar aporte oficial
+                </button>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- 3. MI SPEECH Y NOTAS EN VIVO DENTRO DE LA REUNIÓN (Con asistencia IA) -->
+          <div x-show="pestañaLateral === 'speech'" class="flex-1 flex flex-col p-2.5 overflow-y-auto space-y-2.5 text-xs">
+            <div class="flex items-center justify-between border-b border-slate-800 pb-1.5">
+              <div>
+                <span class="font-bold text-sky-400 text-xs block">Mi speech preparado</span>
+                <span class="text-[10px] text-slate-400">Tus notas sincronizadas con tu cuenta</span>
+              </div>
+              <div class="flex items-center gap-1.5">
+                <button type="button" @click="alternarDictadoPorVoz('speech')"
+                        class="px-2 py-0.5 rounded border text-[10px] transition flex items-center gap-1"
+                        :class="dictandoEn === 'speech' ? 'bg-rose-500/20 border-rose-500/50 text-rose-300 animate-pulse' : 'bg-slate-800 border-slate-700 text-slate-300 hover:text-white'">
+                  <i data-lucide="mic" class="w-3 h-3"></i>
+                  <span x-text="dictandoEn === 'speech' ? 'Dictando...' : 'Dictar'"></span>
+                </button>
+                <button @click="asistirSpeechConIa('Optimizar speech para intervenir en este momento')" :disabled="cargandoIaSpeech"
+                        class="px-2 py-0.5 rounded bg-sky-950 border border-sky-800 text-sky-300 hover:text-white text-[10px] flex items-center gap-1 font-medium">
+                  <i data-lucide="sparkles" class="w-3 h-3"></i>
+                  <span x-text="cargandoIaSpeech ? 'Optimizando...' : 'Pulir con IA'"></span>
+                </button>
+              </div>
+            </div>
+
+            <div>
+              <textarea x-model="speechPlanTexto" rows="5" placeholder="Escribe o revisa aquí tus argumentos para la sesión..."
+                        class="w-full px-2.5 py-2 bg-slate-900 border border-slate-700 rounded-lg text-xs text-white focus:outline-none focus:border-sky-500 leading-relaxed"></textarea>
+            </div>
+
+            <!-- Sugerencia rápida de IA si existe -->
+            <template x-if="resultadoIaSpeech">
+              <div class="p-2.5 rounded-lg bg-sky-950/40 border border-sky-800/60 text-xs space-y-1.5">
+                <div class="flex items-center justify-between">
+                  <span class="font-bold text-sky-300 text-[11px]">Propuesta de la IA:</span>
+                  <button @click="aplicarSpeechOptimizado()" class="px-2 py-0.5 rounded bg-sky-600 text-white text-[10px] font-semibold">
+                    Adoptar
+                  </button>
+                </div>
+                <p class="text-slate-200 text-[11px] leading-relaxed whitespace-pre-line" x-text="resultadoIaSpeech.speech_optimizado"></p>
+                <template x-if="resultadoIaSpeech.consejo_oratoria">
+                  <span class="text-[10px] text-amber-300 block italic" x-text="resultadoIaSpeech.consejo_oratoria"></span>
+                </template>
+              </div>
+            </template>
+
+            <!-- Acciones rápidas de oratoria -->
+            <div class="flex flex-wrap gap-1">
+              <button @click="asistirSpeechConIa('Hacerlo más breve y directo en 2 oraciones')" :disabled="cargandoIaSpeech"
+                      class="px-2 py-0.5 rounded bg-slate-900 border border-slate-800 hover:border-slate-700 text-[10px] text-slate-300">
+                Resumir en 2 oraciones
+              </button>
+              <button @click="asistirSpeechConIa('Enfocar el discurso en el tema activo')" :disabled="cargandoIaSpeech"
+                      class="px-2 py-0.5 rounded bg-slate-900 border border-slate-800 hover:border-slate-700 text-[10px] text-slate-300">
+                Alinear con tema activo
+              </button>
+            </div>
+
+            <div class="pt-2 border-t border-slate-800 flex justify-between items-center">
+              <button @click="guardarSpeech()" :disabled="guardandoSpeech"
+                      class="w-full py-1.5 rounded bg-sky-600 hover:bg-sky-500 text-white text-xs font-semibold flex items-center justify-center gap-1.5">
+                <i data-lucide="save" class="w-3.5 h-3.5"></i>
+                <span x-text="guardandoSpeech ? 'Guardando...' : 'Guardar cambios'"></span>
+              </button>
+            </div>
+          </div>
+
+          <!-- 4. AGENDA DE LA REUNIÓN (Con adición de temas y avance) -->
+          <div x-show="pestañaLateral === 'agenda'" class="flex-1 flex flex-col p-2.5 overflow-y-auto">
+            <div class="flex items-center justify-between mb-2.5">
+              <span class="text-xs font-bold uppercase tracking-wider text-slate-300">Agenda</span>
+              <button @click="mostrarAgregarTema = !mostrarAgregarTema" class="text-xs text-sky-400 hover:text-sky-300 font-semibold flex items-center gap-1">
+                <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+                <span>Nuevo tema</span>
+              </button>
+            </div>
+
+            <div x-show="mostrarAgregarTema" x-transition class="mb-2.5 p-2 rounded-lg bg-slate-900 border border-slate-700 space-y-1.5">
+              <input type="text" x-model="nuevoTemaInput" placeholder="Título del nuevo tema..."
+                     class="w-full px-2 py-1 bg-slate-950 border border-slate-800 rounded text-xs text-white">
+              <button @click="agregarTema()" class="w-full py-1 bg-sky-600 text-white rounded text-xs font-semibold">
+                Guardar tema
+              </button>
+            </div>
+
+            <div class="space-y-1.5 flex-1 overflow-y-auto text-xs">
+              <template x-for="(tema, idx) in (salaActual ? salaActual.agenda : [])" :key="tema.id">
+                <div class="p-2 rounded-lg border flex items-center justify-between"
+                     :class="salaActual && salaActual.tema_activo && salaActual.tema_activo.id === tema.id ? 'bg-amber-500/10 border-amber-500/40 text-amber-200' : 'bg-slate-900/40 border-slate-800 text-slate-300'">
+                  <div>
+                    <span class="text-[10px] block font-bold" x-text="`Tema ${idx + 1}`"></span>
+                    <span x-text="tema.titulo"></span>
+                  </div>
+                  <template x-if="tema.completado">
+                    <span class="text-emerald-400 font-bold">✓</span>
+                  </template>
+                </div>
+              </template>
+            </div>
+
+            <button class="w-full mt-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-slate-200"
+                    @click="avanzarTema()">
+              Siguiente tema o cerrar
+            </button>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Barra inferior ejecutiva de controles -->
+      <div class="mt-2.5 flex items-center justify-center gap-2.5">
+        <button class="p-2.5 rounded-lg border transition shadow text-xs"
+                :class="micActivo ? 'bg-slate-800 border-slate-700 text-white' : 'bg-rose-500/10 border-rose-500/30 text-rose-400'"
+                @click="alternarMic()" title="Micrófono">
+          <i data-lucide="mic" class="w-4 h-4" x-show="micActivo"></i>
+          <i data-lucide="mic-off" class="w-4 h-4" x-show="!micActivo"></i>
+        </button>
+
+        <button class="p-2.5 rounded-lg border transition shadow text-xs"
+                :class="camActiva ? 'bg-slate-800 border-slate-700 text-white' : 'bg-slate-900 border-slate-800 text-slate-400'"
+                @click="alternarCam()" title="Cámara">
+          <i data-lucide="video" class="w-4 h-4" x-show="camActiva"></i>
+          <i data-lucide="video-off" class="w-4 h-4" x-show="!camActiva"></i>
+        </button>
+
+        <button class="p-2.5 rounded-lg border transition shadow text-xs"
+                :class="manoLevantada ? 'bg-amber-500/20 border-amber-500/40 text-amber-400' : 'bg-slate-800 border-slate-700 text-white'"
+                @click="alternarMano()" title="Pedir palabra">
+          <i data-lucide="hand" class="w-4 h-4"></i>
+        </button>
+
+        <button class="px-4 py-2 rounded-lg bg-rose-600 hover:bg-rose-500 text-white font-semibold text-xs shadow"
+                @click="concluirReunion()">
+          Concluir reunión
+        </button>
+      </div>
+    </section>
+
+    <!-- 7. PANTALLA: MINUTA Y ACUERDOS -->
+    <section x-show="vista === 'minuta'" class="max-w-2xl w-full mx-auto" x-transition>
+      <div class="tarjeta-vidrio rounded-2xl p-6 sm:p-7">
+        <div class="flex items-center justify-between border-b border-slate-800 pb-3 mb-4">
+          <div>
+            <span class="text-xs text-amber-500 font-bold uppercase tracking-wider">Acta ejecutiva</span>
+            <h2 class="text-xl font-bold text-white mt-0.5" x-text="salaActual ? salaActual.nombre : 'Reunión'"></h2>
+          </div>
+          <div class="text-right">
+            <span class="text-xs text-slate-400 block">Balance final:</span>
+            <span class="text-base font-extrabold text-sky-400" x-text="`${salaActual ? salaActual.indice_equilibrio : 100}%`"></span>
+          </div>
+        </div>
+
+        <template x-if="cargandoMinuta">
+          <div class="py-10 text-center text-sky-400 animate-pulse font-medium text-xs">
+            Sintetizando decisiones con Gemini 3.8 Flash...
+          </div>
+        </template>
+
+        <template x-if="!cargandoMinuta">
+          <div>
+            <div class="p-4 rounded-xl bg-slate-900/60 border border-slate-800 text-xs leading-relaxed prose prose-invert max-w-none mb-5"
+                 x-html="marked.parse(minutaGeneradaMarkdown)"></div>
+
+            <div class="flex gap-2.5">
+              <button class="flex-1 py-2 rounded-lg bg-sky-600 hover:bg-sky-500 text-white font-semibold text-xs"
+                      @click="navigator.clipboard.writeText(minutaGeneradaMarkdown); alert('Minuta copiada');">
+                Copiar minuta
+              </button>
+              <button class="flex-1 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-white font-semibold text-xs"
+                      @click="window.print()">
+                Imprimir o PDF
+              </button>
+              <button class="py-2 px-4 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs"
+                      @click="navegarA('salas')">
+                Volver a salas
+              </button>
+            </div>
+          </div>
+        </template>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ================= MODAL: INVITACIÓN A PARTICIPAR DEL ANFITRIÓN ================= -->
+  <div x-show="mostrarModalInvitacionAnfitrion" class="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50" x-transition>
+    <div class="tarjeta-vidrio rounded-2xl p-5 max-w-sm w-full shadow-2xl text-xs border border-sky-600/40">
+      <div class="flex items-center gap-2.5 mb-3 text-sky-400">
+        <div class="p-2 rounded-lg bg-sky-950/60 border border-sky-800">
+          <i data-lucide="sparkles" class="w-4 h-4"></i>
+        </div>
+        <div>
+          <span class="text-[10px] font-bold uppercase tracking-wider text-amber-400">Invitación a deliberar</span>
+          <h3 class="text-sm font-bold text-white">El anfitrión te invita a aportar</h3>
+        </div>
+      </div>
+
+      <p class="text-slate-300 text-xs mb-3 leading-relaxed">
+        El anfitrión te invita a compartir tu perspectiva en el tema:
+        <strong class="text-sky-300 block mt-1" x-text="invitacionAnfitrionRecibida ? invitacionAnfitrionRecibida.tema : 'Tema central'"></strong>
+      </p>
+
+      <p class="text-[11px] text-slate-400 mb-4 bg-slate-900/60 p-2.5 rounded-lg border border-slate-800">
+        Puedes preparar tu propuesta con la asistencia del agente o dejar pasar esta invitación de manera discreta sin notificar al resto del equipo.
+      </p>
+
+      <div class="flex gap-2">
+        <button class="flex-1 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium text-xs transition"
+                @click="responderInvitacionAnfitrion(false)">
+          Dejar pasar
+        </button>
+        <button class="flex-1 py-2 rounded-lg bg-sky-600 hover:bg-sky-500 font-semibold text-white text-xs transition flex items-center justify-center gap-1.5 shadow"
+                @click="responderInvitacionAnfitrion(true)">
+          <i data-lucide="message-square" class="w-3.5 h-3.5"></i>
+          <span>Preparar aporte</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= MODAL: GUARDAR ENLACE O CÓDIGO DE REUNIÓN ================= -->
+  <div x-show="mostrarModalGuardarEnlace" class="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 z-50" x-transition>
+    <div class="tarjeta-vidrio rounded-2xl p-5 max-w-sm w-full shadow-2xl text-xs">
+      <div class="flex items-center justify-between mb-3.5">
+        <h3 class="text-sm font-bold text-white">Guardar enlace o código de reunión</h3>
+        <button class="text-slate-400 hover:text-white" @click="mostrarModalGuardarEnlace = false">✕</button>
+      </div>
+
+      <p class="text-slate-400 text-[11px] mb-3">
+        Ingresa el código o enlace que recibiste para tenerlo disponible en tu panel y planificar tu speech con anticipación.
+      </p>
+
+      <form @submit.prevent="guardarEnlaceManual()" class="space-y-3 mb-2">
+        <div>
+          <label class="block text-[11px] font-semibold text-slate-300 uppercase mb-1">Código o enlace de la reunión:</label>
+          <input type="text" x-model="codigoGuardarInput" required placeholder="Ej. ORB-7842"
+                 class="w-full px-2.5 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-white font-mono text-xs uppercase focus:outline-none focus:border-sky-500">
+        </div>
+        <div>
+          <label class="block text-[11px] font-semibold text-slate-300 uppercase mb-1">Nombre o referencia de la sesión (opcional):</label>
+          <input type="text" x-model="nombreGuardarInput" placeholder="Ej. Comité Directivo de Proyecto"
+                 class="w-full px-2.5 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-white text-xs focus:outline-none focus:border-sky-500">
+        </div>
+
+        <div class="flex gap-2 pt-2">
+          <button type="button" @click="mostrarModalGuardarEnlace = false" class="w-1/3 py-2 rounded-lg bg-slate-800 text-slate-300 text-xs">
+            Cancelar
+          </button>
+          <button type="submit" class="w-2/3 py-2 rounded-lg bg-sky-600 hover:bg-sky-500 font-semibold text-white text-xs">
+            Guardar en mi cuenta
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ================= MODAL: CENTRO DE ACCESIBILIDAD ================= -->
+  <div x-show="mostrarModalAccesibilidad" class="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 z-50" x-transition>
+    <div class="tarjeta-vidrio rounded-2xl p-5 max-w-sm w-full shadow-2xl text-xs">
+      <div class="flex items-center justify-between mb-3.5">
+        <h3 class="text-sm font-bold text-white">Centro de accesibilidad e inclusión</h3>
+        <button class="text-slate-400 hover:text-white" @click="mostrarModalAccesibilidad = false">✕</button>
+      </div>
+
+      <div class="space-y-2 mb-4">
+        <button class="w-full p-2 rounded-lg bg-slate-900/80 border border-slate-800 flex items-center justify-between"
+                @click="alternarAltoContraste()">
+          <span>Alto contraste</span>
+          <span class="font-bold text-sky-400" x-text="altoContraste ? 'Activado' : 'Desactivado'"></span>
+        </button>
+
+        <button class="w-full p-2 rounded-lg bg-slate-900/80 border border-slate-800 flex items-center justify-between"
+                @click="alternarBajaEstimulacion()">
+          <span>Baja estimulación (sin giro)</span>
+          <span class="font-bold text-sky-400" x-text="bajaEstimulacion ? 'Activado' : 'Desactivado'"></span>
+        </button>
+
+        <button class="w-full p-2 rounded-lg bg-slate-900/80 border border-slate-800 flex items-center justify-between"
+                @click="alternarTextoGrande()">
+          <span>Texto ampliado</span>
+          <span class="font-bold text-sky-400" x-text="textoGrande ? 'Activado' : 'Desactivado'"></span>
+        </button>
+
+        <button class="w-full p-2 rounded-lg bg-slate-900/80 border border-slate-800 flex items-center justify-between"
+                @click="alternarFuenteAccesible()">
+          <span>Tipografía legible (dislexia)</span>
+          <span class="font-bold text-sky-400" x-text="fuenteAccesible ? 'Activado' : 'Desactivado'"></span>
+        </button>
+      </div>
+
+      <button class="w-full py-2 rounded-lg bg-sky-600 hover:bg-sky-500 font-semibold text-white"
+              @click="mostrarModalAccesibilidad = false">
+        Aceptar
+      </button>
+    </div>
+  </div>
+
+</body>
+</html>

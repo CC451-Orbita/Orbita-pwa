@@ -1,0 +1,39 @@
+digraph G {
+  graph [rankdir=TB, fontname="DejaVu Sans", nodesep=0.35, ranksep=0.65, bgcolor="white", label="Diagrama C4 – Nivel 2: Contenedores y componentes de la PWA (v1.0)", labelloc=t, fontsize=16, compound=true];
+  node [shape=box, style="rounded,filled", fontname="DejaVu Sans", fontsize=9.5, color="#3A3366", margin="0.15,0.08"];
+  edge [fontname="DejaVu Sans", fontsize=8, color="#555555"];
+  u [label="Usuario\n[Persona]", fillcolor="#08427B", fontcolor=white];
+  subgraph cluster_pwa {
+    label="Órbita PWA [navegador de laptop o celular]"; fontname="DejaVu Sans"; fontsize=12; style="dashed,rounded"; color="#6F5ED8";
+    ui [label="Interfaz y navegación\n(app.js, index.html)\n18 vistas, modales accesibles", fillcolor="#C9C1FA"];
+    prep [label="Preparación\n(prep.js)\nsala de espera, notas,\nhazlo corto, ensayo", fillcolor="#C9C1FA"];
+    ext [label="Pantallas complementarias\n(extras.js)\ntutorial, invitar (QR),\nvoces, encuesta SUS", fillcolor="#FFD9A8"];
+    hist [label="Historial y panel\n(historial.js)\nreuniones guardadas,\nindicadores del equipo", fillcolor="#FFD9A8"];
+    orb [label="Interfaz orbital\n(orbits.js – SVG)", fillcolor="#C9C1FA"];
+    sala [label="Motor de reunión\n(room.js)\nmodo real y demo, cierre\nde tema, ventana de órbita", fillcolor="#C9C1FA"];
+    ag [label="Agenda y análisis\n(agenda.js)\nagenda por sala, enlaces,\ndetector de cierre, resumen", fillcolor="#FFD9A8"];
+    rt [label="Capa de tiempo real\n(realtime.js)\nlocal | Supabase + respaldo", fillcolor="#FFD9A8"];
+    dia [label="Diarización\n(diarizacion.js)\nhuella de voz, clasificación", fillcolor="#FFD9A8"];
+    voz [label="Voz (voice.js)\nSTT continuo, TTS,\ncomandos, vibración", fillcolor="#C9C1FA"];
+    llm [label="Capa LLM (llm.js +\nmarkdown.js)\nSimulado | Gemini | Ollama", fillcolor="#C9C1FA"];
+    perf [label="Perfil persistente\n(profile.js)", fillcolor="#C9C1FA"];
+    sus [label="Encuesta SUS\n(sus.js)", fillcolor="#FFD9A8"];
+    sw [label="Service worker (sw.js)\ncaché offline v10", fillcolor="#E6E2FC"];
+    tests [label="Pruebas (tests/run.js)\n45 pruebas", fillcolor="#E6E2FC"];
+  }
+  ls [label="localStorage\n[perfil, notas,\nhistorial, voces, SUS]", shape=cylinder, fillcolor="#FFE3B0"];
+  data [label="Datos simulados\n(data/)", shape=cylinder, fillcolor="#FFE3B0"];
+  g [label="Gemini / Ollama\n[externo]", fillcolor="#999999", fontcolor=white];
+  ws [label="Web Speech +\nWeb Audio [externo]", fillcolor="#999999", fontcolor=white];
+  sb [label="Supabase Realtime\n[externo, opcional]", fillcolor="#999999", fontcolor=white];
+  bc [label="BroadcastChannel\n[navegador]", fillcolor="#999999", fontcolor=white];
+  u -> ui [label="toques, voz, teclado"];
+  ui -> prep; ui -> ext; ui -> hist; ui -> orb; ui -> sala; ui -> voz;
+  sala -> ag [label="agenda,\ncierre"]; sala -> rt [label="eventos"]; sala -> llm [label="invitación,\nresumen"];
+  ext -> dia [label="inscribir voces"]; ui -> dia [label="atribuir frase"];
+  ext -> sus; ext -> rt [label="presencia"];
+  prep -> llm; prep -> voz;
+  llm -> g [label="HTTPS"]; voz -> ws; dia -> ws;
+  rt -> sb [label="WebSocket"]; rt -> bc;
+  perf -> ls; hist -> ls; prep -> perf; sala -> data [label="guion demo"];
+}
