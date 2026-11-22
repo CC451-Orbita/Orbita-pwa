@@ -218,8 +218,8 @@ class LLMService:
                 logger.error(f"Error parseando JSON de revisión: {e}")
 
         return {
-            "aprobado_para_publicar": True,
-            "evaluacion": "La propuesta es clara, directa y se alinea con los objetivos del tema.",
+            "aprobado_para_publicar": False,
+            "evaluacion": "Gemini no pudo revisar el borrador. Puedes editarlo y publicarlo directamente.",
             "sugerencia_mejora": contenido
         }
 

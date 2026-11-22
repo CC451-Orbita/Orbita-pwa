@@ -48,6 +48,7 @@ document.addEventListener("alpine:init", () => {
 
     // Paneles en reunión
     panelLateralAbierto: true,
+    panelReunionMovil: "centro",
     pestañaLateral: "chat", // 'chat', 'agente', 'agenda'
     pestañaCentro: "radar", // 'radar' o 'aportes'
     aporteDesplegadoId: null, // ID del aporte expandido
@@ -67,7 +68,8 @@ document.addEventListener("alpine:init", () => {
       puntos_clave: [],
       impacto: "Medio"
     },
-    modoFormatoAporte: false,
+    publicandoAporte: false,
+    errorAporte: "",
     cargandoFormatoAporte: false,
     evaluacionIaFormato: null,
     nuevoPuntoClaveInput: "",
@@ -269,6 +271,8 @@ document.addEventListener("alpine:init", () => {
       if (!this.usuario) return;
       try {
         this.misReuniones = await window.orbitaApi.obtenerReunionesUsuario(this.usuario.id);
+        // Las tarjetas se crean después de la primera pasada de íconos: hay que dibujarlos de nuevo
+        this.$nextTick(() => { if (window.lucide) window.lucide.createIcons(); });
       } catch (e) {
         console.error("Error al cargar reuniones:", e);
       }
@@ -521,6 +525,24 @@ document.addEventListener("alpine:init", () => {
       }
     },
 
+    mostrarPanelReunion(panel) {
+      if (panel === "radar" || panel === "aportes") {
+        this.pestañaCentro = panel;
+        this.panelReunionMovil = "centro";
+      } else {
+        this.pestañaLateral = panel;
+        this.panelLateralAbierto = true;
+        this.panelReunionMovil = "lateral";
+      }
+    },
+
+    abrirBorradorAporte() {
+      if (!this.$refs.editorAporte.open) {
+        this.errorAporte = "";
+        this.$refs.editorAporte.showModal();
+      }
+    },
+
     async generarFormatoDesdeChat() {
       this.cargandoFormatoAporte = true;
       this.evaluacionIaFormato = null;
@@ -536,15 +558,10 @@ document.addEventListener("alpine:init", () => {
           puntos_clave: res.formato.puntos_clave || [],
           impacto: res.formato.impacto || "Medio"
         };
-        this.modoFormatoAporte = true;
+        this.abrirBorradorAporte();
       } catch (err) {
-        this.formatoAporteBorrador = {
-          titulo: "Propuesta de optimización",
-          contenido: "Planteamiento concreto estructurado en el chat.",
-          puntos_clave: ["Alineación inmediata", "Definir responsables"],
-          impacto: "Medio"
-        };
-        this.modoFormatoAporte = true;
+        this.abrirBorradorAporte();
+        this.errorAporte = "No se pudo generar el borrador: " + err.message;
       } finally {
         this.cargandoFormatoAporte = false;
       }
@@ -562,6 +579,9 @@ document.addEventListener("alpine:init", () => {
     },
 
     async solicitarRevisionAgente(observacion = "") {
+      if (this.cargandoFormatoAporte || !this.formatoAporteBorrador.contenido.trim()) return;
+      this.errorAporte = "";
+      this.evaluacionIaFormato = null;
       this.cargandoFormatoAporte = true;
       try {
         const tema = this.salaActual?.tema_activo?.titulo || "Tema central";
@@ -574,11 +594,7 @@ document.addEventListener("alpine:init", () => {
         );
         this.evaluacionIaFormato = res.revision;
       } catch (err) {
-        this.evaluacionIaFormato = {
-          aprobado_para_publicar: true,
-          evaluacion: "La propuesta cumple con los criterios de concisión.",
-          sugerencia_mejora: this.formatoAporteBorrador.contenido
-        };
+        this.errorAporte = "No se pudo revisar el aporte: " + err.message;
       } finally {
         this.cargandoFormatoAporte = false;
       }
@@ -592,24 +608,30 @@ document.addEventListener("alpine:init", () => {
     },
 
     async publicarAporteOficial() {
-      if (!this.formatoAporteBorrador.contenido.trim() || !this.salaActual || !this.usuario) return;
+      const texto = this.formatoAporteBorrador.contenido.trim();
+      if (!texto || !this.salaActual || !this.usuario || this.publicandoAporte) return;
 
+      this.publicandoAporte = true;
+      this.errorAporte = "";
       try {
         await window.orbitaApi.enviarAporte(this.salaActual.codigo, this.usuario.id, {
-          titulo: this.formatoAporteBorrador.titulo,
-          texto: this.formatoAporteBorrador.contenido,
+          titulo: this.formatoAporteBorrador.titulo.trim() || "Propuesta",
+          texto,
           puntos_clave: this.formatoAporteBorrador.puntos_clave,
           impacto_estimado: this.formatoAporteBorrador.impacto,
           anonimo: false,
           duracion_segundos: 8.0
         });
 
-        this.modoFormatoAporte = false;
+        this.$refs.editorAporte.close();
+        this.nuevoPuntoClaveInput = "";
         this.formatoAporteBorrador = { titulo: "", contenido: "", puntos_clave: [], impacto: "Medio" };
         this.evaluacionIaFormato = null;
-        this.pestañaCentro = "aportes";
+        this.mostrarPanelReunion("aportes");
       } catch (err) {
-        alert("Error al publicar aporte: " + err.message);
+        this.errorAporte = "No se pudo publicar el aporte: " + err.message;
+      } finally {
+        this.publicandoAporte = false;
       }
     },
 
@@ -646,6 +668,10 @@ document.addEventListener("alpine:init", () => {
     procesarEventoWs(tipo, datos) {
       if (tipo === "participante_ingreso") {
         if (this.salaActual) {
+          const esNuevo = !this.salaActual.participantes[datos.participante.id];
+          if (esNuevo && this.sistemaOrbitalD3) {
+            this.sistemaOrbitalD3.anunciarLlegada(datos.participante.id);
+          }
           this.salaActual.participantes[datos.participante.id] = datos.participante;
           this.salaActual.indice_equilibrio = datos.indice_equilibrio;
           this.actualizarRadar();

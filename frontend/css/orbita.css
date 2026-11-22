@@ -1,21 +1,235 @@
 /* Estilos de diseño para Órbita v3.0
-   Paleta: Deep Slate, Space Navy, Steel Blue, Champagne Gold y Mint Emerald.
+   Dirección visual «carta celeste»: fondo de espacio profundo con galaxias,
+   el tema como un sol azafrán y cada participante con su propio color.
 */
 
 :root {
-  --color-espacio: #030712;
-  --color-superficie: #0b1329;
-  --color-borde: rgba(51, 65, 85, 0.45);
-  --color-sol: #d97706;
-  --color-equilibrio: #0284c7;
-  --color-acento: #2563eb;
+  --noche: #070c1a;
+  --superficie: #0e1628;
+  --trazo: #22304d;
+  --tinta: #eaf0fa;
+  --tinta-suave: #9aa8c4;
+  --sol: #f2a93b;
+  --sol-claro: #f7c46e;
+  --equilibrio: #cdd8ee;
+
+  /* Alias heredados por el resto de pantallas */
+  --color-espacio: var(--noche);
+  --color-superficie: var(--superficie);
+  --color-borde: rgba(34, 48, 77, 0.8);
+  --color-sol: var(--sol);
 }
 
 body {
-  background-color: var(--color-espacio);
-  color: #f1f5f9;
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  background-color: var(--noche);
+  color: var(--tinta);
+  font-family: "Atkinson Hyperlegible Next", system-ui, sans-serif;
   overflow-x: hidden;
+}
+
+:focus-visible {
+  outline: 2px solid var(--sol-claro);
+  outline-offset: 2px;
+}
+
+/* ---------- Barra superior ---------- */
+.barra-superior {
+  background: rgba(7, 12, 26, 0.86);
+  border-bottom: 1px solid var(--color-borde);
+  backdrop-filter: blur(10px);
+}
+
+.marca {
+  display: inline-flex;
+  align-items: center;
+  gap: .6rem;
+  color: var(--tinta);
+  text-decoration: none;
+  border-radius: .4rem;
+}
+
+.marca-simbolo {
+  width: 1.75rem;
+  height: 1.75rem;
+}
+
+.marca-nombre {
+  font-size: 1.05rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.marca-version {
+  font-size: .75rem;
+  color: var(--tinta-suave);
+}
+
+/* ---------- Portada ---------- */
+.portada {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr);
+  align-items: center;
+  gap: clamp(2rem, 5vw, 5rem);
+  width: 100%;
+  padding-block: clamp(1.5rem, 4vw, 3rem);
+}
+
+.portada-cielo,
+.cielo-fondo {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  width: 100vw;
+  height: 100vh;
+  pointer-events: none;
+}
+
+/* Galaxia detrás del sistema solar de la reunión */
+.cielo-reunion {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+/* Baja estimulación: la portada y la reunión quedan sin fondo de galaxia */
+body.baja-estimulacion .cielo {
+  display: none !important;
+}
+
+.portada-texto {
+  max-width: 34rem;
+}
+
+.portada-titulo {
+  font-size: clamp(2.4rem, 4.6vw, 4.1rem);
+  font-weight: 250;
+  line-height: 1.04;
+  letter-spacing: -0.025em;
+  color: var(--tinta);
+  margin-bottom: 1.75rem;
+  text-wrap: balance;
+}
+
+.portada-resumen {
+  font-size: 1.0625rem;
+  line-height: 1.6;
+  color: var(--tinta-suave);
+  max-width: 32rem;
+}
+
+.portada-resumen + .portada-resumen {
+  margin-top: .75rem;
+}
+
+.portada-acciones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .75rem;
+  margin-top: 2.25rem;
+}
+
+.boton-sol,
+.boton-trazo {
+  min-height: 2.875rem;
+  padding: .7rem 1.4rem;
+  border-radius: 999px;
+  font-size: 1rem;
+  font-weight: 700;
+  transition: background-color .15s ease, border-color .15s ease;
+}
+
+.boton-sol {
+  background: var(--sol);
+  color: #1b1405;
+}
+
+.boton-sol:hover {
+  background: var(--sol-claro);
+}
+
+.boton-trazo {
+  border: 1.5px solid #33456b;
+  color: var(--tinta);
+}
+
+.boton-trazo:hover {
+  border-color: var(--tinta-suave);
+}
+
+.portada-carta {
+  margin: 0;
+  width: 100%;
+  max-width: 34rem;
+  justify-self: center;
+}
+
+#portada-orbitas {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+
+.portada-leyenda {
+  margin-top: .5rem;
+  font-size: .9375rem;
+  color: var(--tinta-suave);
+  text-align: center;
+}
+
+.portada-participantes {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: .5rem;
+  margin-top: .75rem;
+}
+
+.portada-participantes button {
+  display: inline-flex;
+  align-items: center;
+  gap: .45rem;
+  min-height: 2.5rem;
+  padding: .35rem .85rem .35rem .6rem;
+  border: 1px solid var(--color-borde);
+  border-radius: 999px;
+  color: var(--tinta);
+  font-size: .9375rem;
+  transition: border-color .15s ease;
+}
+
+.portada-participantes button:hover {
+  border-color: var(--tinta-suave);
+}
+
+.portada-participantes .punto {
+  width: .7rem;
+  height: .7rem;
+  border-radius: 50%;
+}
+
+.portada-participantes .cifra {
+  color: var(--tinta-suave);
+  font-variant-numeric: tabular-nums;
+}
+
+@media (max-width: 860px) {
+  .portada {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 1rem;
+    padding-block: .5rem 2rem;
+  }
+
+  .portada-carta {
+    max-width: 24rem;
+    margin-top: 1.5rem;
+  }
+
+  .portada-titulo {
+    margin-bottom: 1.25rem;
+  }
 }
 
 /* Modo alto contraste (WCAG 2.2 AA) */
@@ -51,16 +265,46 @@ body.texto-grande {
   font-size: 1.15rem;
 }
 
-/* Tarjeta con efecto de cristal sobrio y profesional */
+/* Paneles translúcidos: las estrellas del fondo se intuyen detrás */
 .tarjeta-vidrio {
-  background: rgba(11, 19, 41, 0.72);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
-  border: 1px solid rgba(51, 65, 85, 0.5);
+  background: rgba(14, 22, 40, 0.74);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(34, 48, 77, 0.85);
 }
 
-.tarjeta-vidrio:hover {
-  border-color: rgba(37, 99, 235, 0.4);
+/* Títulos de pantalla: el mismo trazo ligero del titular de la portada */
+.titulo-pantalla {
+  font-size: clamp(1.6rem, 2.6vw, 2.1rem);
+  font-weight: 300;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  color: var(--tinta);
+  text-wrap: balance;
+}
+
+/* Campos de formulario coherentes en toda la aplicación */
+main input:not([type="checkbox"]):not([type="radio"]),
+main textarea,
+main select,
+dialog input,
+dialog textarea {
+  border-radius: .6rem;
+}
+
+main input:focus-visible,
+main textarea:focus-visible,
+main select:focus-visible,
+dialog input:focus-visible,
+dialog textarea:focus-visible {
+  outline: 2px solid var(--sol-claro);
+  outline-offset: 1px;
+  border-color: transparent;
+}
+
+::placeholder {
+  color: #7f93ba;
+  opacity: 1;
 }
 
 /* Contenedor del radar orbital D3 */
@@ -86,34 +330,466 @@ body.texto-grande {
   outline: none !important;
 }
 
-/* Animación sutil para el sol central */
-@keyframes pulsarSol {
-  0%, 100% {
-    r: 40px;
-    opacity: 0.35;
+/* El foco del teclado se dibuja como un anillo alrededor del planeta */
+.foco-planeta {
+  opacity: 0;
+}
+
+.nodo-planeta:focus-visible .foco-planeta {
+  opacity: 1;
+}
+
+.etiqueta-planeta {
+  paint-order: stroke;
+  stroke: var(--noche);
+  stroke-width: 3px;
+  stroke-linejoin: round;
+  pointer-events: none;
+}
+
+/* Alto de la ventana menos la barra superior (3.5rem) y el margen del contenedor.
+   section.sala-reunion gana a la clase flex-1, que si no estiraría la sala a su contenido */
+section.sala-reunion {
+  flex: none;
+  height: calc(100vh - 3.5rem - 3rem);
+  min-width: 0;
+}
+
+.paneles-reunion {
+  overflow: hidden;
+  min-height: 0;
+}
+
+.panel-reunion-lateral {
+  height: 100%;
+}
+
+.editor-aporte button:disabled {
+  opacity: .5;
+}
+
+/* ---------- Sistema de botones ----------
+   primario: la acción principal de cada pantalla (azafrán, como el sol)
+   secundario: acciones de apoyo; icono: acciones sin texto visible; peligro: salir o cerrar */
+.boton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: .45rem;
+  min-height: 2.5rem;
+  padding: .5rem 1.05rem;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  font-size: .9375rem;
+  font-weight: 700;
+  line-height: 1.1;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background-color .15s ease, border-color .15s ease, color .15s ease;
+}
+
+.boton:disabled {
+  opacity: .5;
+  cursor: not-allowed;
+}
+
+.boton-primario {
+  background: var(--sol);
+  color: #1b1405;
+}
+
+.boton-primario:hover:not(:disabled) {
+  background: var(--sol-claro);
+}
+
+.boton-secundario {
+  background: rgba(23, 34, 56, 0.8);
+  border-color: #33456b;
+  color: var(--tinta);
+}
+
+.boton-secundario:hover:not(:disabled) {
+  border-color: var(--tinta-suave);
+  background: rgba(37, 51, 79, 0.9);
+}
+
+.boton-icono {
+  width: 2.5rem;
+  padding: 0;
+  background: transparent;
+  border-color: #33456b;
+  color: var(--tinta-suave);
+}
+
+.boton-icono:hover {
+  color: var(--tinta);
+  border-color: var(--tinta-suave);
+}
+
+.boton-peligro {
+  background: rgba(225, 29, 72, 0.16);
+  border-color: rgba(251, 113, 133, 0.55);
+  color: #fecdd3;
+}
+
+.boton-peligro:hover {
+  background: #e11d48;
+  border-color: #e11d48;
+  color: #fff;
+}
+
+.boton-compacto {
+  min-height: 2rem;
+  padding: .3rem .8rem;
+  font-size: .8125rem;
+}
+
+.boton-cuadrado {
+  width: 2.5rem;
+  padding: 0;
+}
+
+summary.boton {
+  list-style: none;
+}
+
+summary.boton::-webkit-details-marker {
+  display: none;
+}
+
+/* ---------- Barra superior de la reunión ---------- */
+.barra-reunion {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: .75rem;
+}
+
+.barra-reunion-escritorio {
+  display: flex;
+}
+
+/* Selector de vista: un solo control con opciones, la activa en azafrán */
+.selector-vista {
+  gap: .25rem;
+  padding: .25rem;
+  border-radius: 999px;
+  background: rgba(14, 22, 40, 0.85);
+  border: 1px solid var(--color-borde);
+}
+
+.opcion-vista {
+  display: inline-flex;
+  align-items: center;
+  gap: .4rem;
+  min-height: 2.25rem;
+  padding: .35rem .95rem;
+  border-radius: 999px;
+  color: var(--tinta-suave);
+  font-size: .9375rem;
+  font-weight: 700;
+  transition: background-color .15s ease, color .15s ease;
+}
+
+.opcion-vista:hover {
+  color: var(--tinta);
+}
+
+.opcion-vista[aria-pressed="true"] {
+  background: rgba(242, 169, 59, 0.16);
+  color: var(--sol-claro);
+  box-shadow: inset 0 0 0 1px rgba(242, 169, 59, 0.45);
+}
+
+/* Tema activo con su pequeño sol y el medidor de equilibrio */
+.tema-actual {
+  display: flex;
+  align-items: center;
+  gap: .6rem;
+  flex: 1 1 18rem;
+  min-width: 0;
+  font-size: .9375rem;
+  color: var(--tinta);
+}
+
+.tema-actual-sol {
+  flex: none;
+  width: .7rem;
+  height: .7rem;
+  border-radius: 50%;
+  background: var(--sol);
+  box-shadow: 0 0 0 4px rgba(242, 169, 59, 0.18);
+}
+
+.tema-reunion {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 700;
+}
+
+.equilibrio {
+  display: inline-flex;
+  align-items: center;
+  gap: .45rem;
+  margin-left: auto;
+  flex: none;
+  font-size: .8125rem;
+  color: var(--tinta-suave);
+}
+
+.equilibrio-barra {
+  width: 4.5rem;
+  height: .35rem;
+  border-radius: 999px;
+  background: rgba(205, 216, 238, 0.15);
+  overflow: hidden;
+}
+
+.equilibrio-barra span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--equilibrio);
+  transition: width .6s ease;
+}
+
+.equilibrio-cifra {
+  color: var(--tinta);
+  font-variant-numeric: tabular-nums;
+}
+
+.acciones-reunion {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+}
+
+.menu-compartir {
+  position: absolute;
+  z-index: 20;
+  top: calc(100% + .4rem);
+  right: 0;
+  display: grid;
+  gap: .35rem;
+  min-width: 12rem;
+  padding: .6rem;
+  border-radius: 1rem;
+  background: #0e1628;
+  border: 1px solid #33456b;
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.45);
+}
+
+.menu-compartir-codigo {
+  padding: .15rem .35rem .35rem;
+  font-size: .875rem;
+  color: var(--tinta-suave);
+}
+
+.navegacion-reunion-movil {
+  display: none;
+}
+
+/* ---------- Barra de controles de la llamada ---------- */
+.controles-reunion {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: .35rem;
+  width: fit-content;
+  max-width: 100%;
+  margin: .75rem auto 0;
+  padding: .4rem .5rem;
+  border-radius: 999px;
+  background: rgba(14, 22, 40, 0.9);
+  border: 1px solid var(--color-borde);
+  backdrop-filter: blur(10px);
+}
+
+.control-llamada {
+  display: inline-flex;
+  align-items: center;
+  gap: .5rem;
+  min-height: 2.75rem;
+  padding: .3rem .9rem .3rem .3rem;
+  border-radius: 999px;
+  color: var(--tinta);
+  font-size: .875rem;
+  font-weight: 700;
+  transition: background-color .15s ease;
+}
+
+.control-llamada:hover {
+  background: rgba(37, 51, 79, 0.7);
+}
+
+.control-llamada-icono {
+  display: grid;
+  place-items: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 50%;
+  background: #172238;
+}
+
+.control-llamada.apagado .control-llamada-icono {
+  background: rgba(225, 29, 72, 0.2);
+  color: #fda4af;
+}
+
+.control-llamada.apagado {
+  color: var(--tinta-suave);
+}
+
+.control-llamada.destacado .control-llamada-icono {
+  background: var(--sol);
+  color: #1b1405;
+}
+
+.control-llamada.destacado {
+  color: var(--sol-claro);
+}
+
+.controles-separador {
+  width: 1px;
+  height: 1.75rem;
+  margin-inline: .25rem;
+  background: var(--color-borde);
+}
+
+
+.editor-aporte {
+  width: min(36rem, calc(100% - 2rem));
+  max-height: calc(100dvh - 2rem);
+  margin: auto;
+}
+
+.editor-aporte::backdrop {
+  background: rgb(2 6 23 / 75%);
+}
+
+.editor-aporte textarea,
+.editor-aporte input {
+  font-size: 1rem;
+}
+
+@media (max-width: 1023px) {
+  section.sala-reunion {
+    height: auto;
+    min-height: calc(100dvh - 6rem);
   }
-  50% {
-    r: 46px;
-    opacity: 0.5;
+
+  .barra-reunion {
+    display: grid;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: .6rem;
+    padding-block: .5rem;
+    background: var(--noche);
+  }
+
+  .barra-reunion-escritorio {
+    display: none;
+  }
+
+  .tema-actual {
+    grid-column: 1 / -1;
+    flex-wrap: wrap;
+    row-gap: .35rem;
+  }
+
+  .tema-reunion {
+    flex: 1 1 0;
+    white-space: normal;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+  }
+
+  .acciones-reunion {
+    grid-column: 1 / -1;
+  }
+
+  .acciones-reunion .publicar-reunion {
+    flex: 1;
+  }
+
+  .texto-opcional {
+    display: none;
+  }
+
+  .navegacion-reunion-movil {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    border-radius: 1.1rem;
+  }
+
+  .navegacion-reunion-movil .opcion-vista {
+    flex-direction: column;
+    justify-content: center;
+    gap: .15rem;
+    min-height: 3rem;
+    padding: .3rem .25rem;
+    border-radius: .85rem;
+    font-size: .8125rem;
+  }
+
+  .boton,
+  .editor-aporte button,
+  .panel-reunion-lateral > div:first-child button {
+    min-height: 44px;
+  }
+
+  .boton-icono {
+    width: 44px;
+  }
+
+  .paneles-reunion[data-panel="centro"] .panel-reunion-lateral,
+  .paneles-reunion[data-panel="lateral"] .panel-reunion-centro {
+    display: none;
+  }
+
+  .paneles-reunion {
+    overflow: visible;
+  }
+
+  .panel-reunion-lateral {
+    height: clamp(20rem, 56dvh, 40rem);
+  }
+
+  .panel-reunion-lateral input {
+    min-width: 0;
+    font-size: 1rem;
   }
 }
 
-.halo-sol-animado {
-  animation: pulsarSol 4s ease-in-out infinite;
-}
-
-/* Rotación suave del anillo de equilibrio */
-@keyframes rotarOrbita {
-  from {
-    transform: rotate(0deg);
+/* En pantallas angostas los controles de la llamada muestran solo el ícono;
+   el texto queda disponible para lectores de pantalla */
+@media (max-width: 640px) {
+  .controles-reunion {
+    gap: .15rem;
+    padding: .35rem;
   }
-  to {
-    transform: rotate(360deg);
-  }
-}
 
-.anillo-equilibrio {
-  stroke-dasharray: 6 6;
-  animation: rotarOrbita 90s linear infinite;
-  transform-origin: 250px 250px;
+  .control-llamada {
+    padding: .25rem;
+  }
+
+  .control-llamada-texto {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+
+  .control-llamada-icono {
+    width: 2.6rem;
+    height: 2.6rem;
+  }
 }

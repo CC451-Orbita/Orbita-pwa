@@ -5,21 +5,44 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Órbita – Videoconferencias colaborativas e inclusivas</title>
 
-  <!-- Tailwind CSS Engine con paleta corporativa espacial sobria -->
+  <!-- Tipografía: Atkinson Hyperlegible Next, diseñada para lectores con baja visión -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Next:wght@200..800&display=swap">
+
+  <!-- Tailwind CSS con la paleta «carta celeste» -->
   <script src="vendor/tailwind/tailwind.js"></script>
   <script>
     tailwind.config = {
       darkMode: 'class',
       theme: {
         extend: {
+          fontFamily: {
+            sans: ['"Atkinson Hyperlegible Next"', 'system-ui', 'sans-serif']
+          },
+          // Tamaños pequeños algo mayores: la interfaz usa mucho text-xs
+          fontSize: {
+            xs: ['0.8125rem', { lineHeight: '1.25rem' }],
+            sm: ['0.9375rem', { lineHeight: '1.4rem' }]
+          },
           colors: {
-            espacio: '#030712',      // Deep Slate 950
-            superficie: '#0b1329',   // Space Navy
-            borde: 'rgba(51, 65, 85, 0.45)',
-            sol: '#d97706',          // Champagne Gold / Amber cálido
-            equilibrio: '#0284c7',   // Steel Blue
-            acento: '#2563eb',       // Executive Blue
-            exito: '#059669'         // Mint Emerald
+            noche: '#070c1a',        // Espacio profundo: fondo
+            superficie: '#0e1628',   // Paneles sobre el fondo
+            trazo: '#22304d',        // Bordes y líneas
+            tinta: '#eaf0fa',        // Texto principal
+            'tinta-oscura': '#1b1405', // Texto sobre azafrán
+            sol: { DEFAULT: '#f2a93b', claro: '#f7c46e' }, // Azafrán: el tema y la acción principal
+            equilibrio: '#cdd8ee',   // Anillo de reparto equilibrado
+            // Grises teñidos de azul espacio: todo el «slate» de la interfaz entona con el fondo
+            slate: {
+              50: '#f4f6fb', 100: '#e8edf6', 200: '#d5dcea', 300: '#b9c4da', 400: '#9aa8c4',
+              500: '#7d8db0', 600: '#3a4a6b', 700: '#25334f', 800: '#172238', 900: '#0e1628', 950: '#070c1a'
+            },
+            // Azul estelar para acentos secundarios (enlaces, etiquetas de tema)
+            sky: {
+              50: '#f5f9ff', 100: '#ebf2ff', 200: '#d6e4ff', 300: '#b8d0ff', 400: '#8fb6ff',
+              500: '#6c9cf5', 600: '#5582e0', 700: '#4269bd', 800: '#34528f', 900: '#273f6d', 950: '#1a2a4a'
+            }
           }
         }
       }
@@ -36,32 +59,38 @@
   <!-- Estilos y módulos -->
   <link rel="stylesheet" href="css/orbita.css">
   <script src="js/api.js"></script>
+  <script src="js/astros.js"></script>
   <script src="js/orbits_d3.js"></script>
+  <script src="js/portada.js" defer></script>
+  <script src="js/cielo.js" defer></script>
   <script src="js/app.js"></script>
 </head>
 
-<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col font-sans select-none" x-data="orbitaApp">
+<body class="min-h-screen flex flex-col font-sans" x-data="orbitaApp" @keydown.escape.window="mostrarModalAccesibilidad = false; mostrarModalGuardarEnlace = false">
+
+  <!-- Cielo tenue y quieto para las pantallas internas (la portada y la reunión tienen el suyo) -->
+  <canvas class="cielo cielo-fondo" data-intensidad="0.45" data-titileo="no" aria-hidden="true"
+          x-show="vista !== 'bienvenida' && vista !== 'reunion'"></canvas>
 
   <!-- ================= BARRA SUPERIOR EJECUTIVA ================= -->
-  <header class="h-14 border-b border-slate-800 bg-slate-900/80 backdrop-blur-md px-4 sm:px-6 flex items-center justify-between sticky top-0 z-40">
-    <div class="flex items-center gap-3 cursor-pointer" @click="navegarA(usuario ? 'salas' : 'bienvenida')">
-      <div class="w-8 h-8 rounded-lg bg-slate-800 border border-slate-700 flex items-center justify-center text-sky-400 shadow-sm">
-        <i data-lucide="orbit" class="w-4 h-4"></i>
-      </div>
-      <div>
-        <h1 class="text-sm font-bold tracking-tight text-white flex items-center gap-2">
-          Órbita
-          <span class="text-[10px] px-1.5 py-0.2 rounded bg-sky-950 text-sky-400 border border-sky-800/60 font-medium">v3.0</span>
-        </h1>
-      </div>
-    </div>
+  <header class="barra-superior h-14 px-4 sm:px-6 flex items-center justify-between sticky top-0 z-40">
+    <a href="#" class="marca" @click.prevent="navegarA(usuario ? 'salas' : 'bienvenida')"
+       :aria-label="usuario ? 'Órbita, ir a mis salas' : 'Órbita, ir al inicio'">
+      <svg class="marca-simbolo" viewBox="0 0 32 32" aria-hidden="true">
+        <circle cx="16" cy="16" r="12.5" fill="none" stroke="currentColor" stroke-width="1.4" opacity=".55"/>
+        <circle cx="16" cy="16" r="5" fill="var(--sol)"/>
+        <circle cx="25" cy="7.5" r="3" fill="currentColor"/>
+      </svg>
+      <span class="marca-nombre">Órbita</span>
+      <span class="marca-version">v3</span>
+    </a>
 
     <!-- Menú de usuario y accesibilidad con menú desplegable -->
     <div class="flex items-center gap-2.5">
       <template x-if="usuario">
         <div class="relative" x-data="{ abierto: false }" @click.outside="abierto = false">
           <button @click="abierto = !abierto"
-                  class="flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-slate-800/80 border border-slate-700 hover:bg-slate-700/80 transition text-xs font-semibold">
+                  class="boton boton-secundario boton-compacto" :aria-expanded="abierto" aria-haspopup="true">
             <span class="w-2.5 h-2.5 rounded-full" :style="`background-color: ${usuario.color}`"></span>
             <span x-text="usuario.nombre" class="text-slate-200"></span>
             <i data-lucide="chevron-down" class="w-3.5 h-3.5 text-slate-400"></i>
@@ -71,8 +100,8 @@
           <div x-show="abierto" x-transition
                class="absolute right-0 mt-2 w-44 rounded-xl bg-slate-900 border border-slate-700 shadow-2xl py-1 z-50 text-xs">
             <div class="px-3 py-1.5 border-b border-slate-800 text-slate-400">
-              <span class="text-[10px] block">Identificador:</span>
-              <strong class="text-white font-mono text-[11px]" x-text="usuario.id"></strong>
+              <span class="text-xs block">Identificador:</span>
+              <strong class="text-white font-mono text-xs" x-text="usuario.id"></strong>
             </div>
             <button @click="navegarA('salas'); abierto = false;" class="w-full text-left px-3 py-2 text-slate-300 hover:bg-slate-800 flex items-center gap-2">
               <i data-lucide="layout-grid" class="w-3.5 h-3.5"></i>
@@ -87,7 +116,7 @@
       </template>
 
       <!-- Botón de centro de accesibilidad -->
-      <button class="p-1.5 rounded-lg bg-slate-800/80 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 transition"
+      <button class="boton boton-icono"
               @click="mostrarModalAccesibilidad = true"
               title="Centro de accesibilidad e inclusión"
               aria-label="Abrir centro de accesibilidad">
@@ -100,40 +129,46 @@
   <main class="flex-1 w-full flex flex-col justify-center max-w-7xl mx-auto p-4 sm:p-6">
 
     <!-- 1. PANTALLA: BIENVENIDA -->
-    <section x-show="vista === 'bienvenida'" class="text-center max-w-2xl mx-auto py-12" x-transition>
-      <div class="w-14 h-14 mx-auto mb-5 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-center text-sky-400 shadow-xl">
-        <i data-lucide="orbit" class="w-7 h-7"></i>
+    <section x-show="vista === 'bienvenida'" class="portada" x-transition.opacity>
+      <canvas id="portada-cielo" class="cielo portada-cielo" data-cometas="si" aria-hidden="true"></canvas>
+      <div class="portada-texto">
+        <h2 class="portada-titulo">Ve cómo se reparte la palabra en tu reunión</h2>
+        <p class="portada-resumen">
+          Órbita dibuja a cada participante como un planeta alrededor del tema.
+          Quien aporta más se acerca al centro y quien aporta poco se aleja.
+          El anillo punteado marca el reparto equilibrado.
+        </p>
+        <p class="portada-resumen">
+          Prepara tu aporte con el asistente, compártelo con la sala y cierra con una minuta.
+        </p>
+        <div class="portada-acciones">
+          <button class="boton-sol" @click="modoAuth = 'login'; navegarA('auth')">Iniciar sesión</button>
+          <button class="boton-trazo" @click="modoAuth = 'registro'; navegarA('auth')">Crear cuenta</button>
+        </div>
       </div>
-      <h2 class="text-2xl sm:text-3xl font-bold text-white tracking-tight mb-3">
-        Deliberación ejecutiva con equilibrio orbital
-      </h2>
-      <p class="text-slate-400 text-xs sm:text-sm mb-6 leading-relaxed">
-        Plataforma corporativa que utiliza metáforas de física orbital e inteligencia artificial contextualizada para optimizar la toma de decisiones grupales.
-      </p>
-      <div class="flex gap-3 justify-center">
-        <button class="px-5 py-2.5 rounded-lg bg-sky-600 hover:bg-sky-500 text-white font-medium text-xs shadow transition flex items-center gap-2"
-                @click="modoAuth = 'login'; navegarA('auth')">
-          <span>Ingresar a la plataforma</span>
-          <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>
-        </button>
-        <button class="px-5 py-2.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 font-medium border border-slate-700 text-xs transition"
-                @click="modoAuth = 'registro'; navegarA('auth')">
-          Registrar usuario
-        </button>
-      </div>
+
+      <figure class="portada-carta" aria-labelledby="portada-carta-leyenda">
+        <svg id="portada-orbitas" viewBox="0 0 520 520" role="img"
+             aria-label="Ejemplo de sistema solar: cuatro planetas giran alrededor del tema a distintas distancias según cuánto ha aportado cada persona."></svg>
+        <figcaption id="portada-carta-leyenda" class="portada-leyenda">
+          <p>Ejemplo con cuatro participantes. Elige un nombre para darle la palabra.</p>
+          <ul class="portada-participantes" id="portada-participantes"></ul>
+          <p class="sr-only" aria-live="polite" id="portada-estado"></p>
+        </figcaption>
+      </figure>
     </section>
 
     <!-- 2. PANTALLA: AUTENTICACIÓN (SQLITE) -->
     <section x-show="vista === 'auth'" class="max-w-md w-full mx-auto" x-transition>
       <div class="tarjeta-vidrio rounded-2xl p-6 sm:p-7 shadow-2xl">
         <div class="flex border-b border-slate-800 mb-5">
-          <button class="flex-1 pb-2.5 text-xs font-bold uppercase tracking-wider text-center border-b-2 transition"
-                  :class="modoAuth === 'login' ? 'border-sky-500 text-sky-400' : 'border-transparent text-slate-400 hover:text-white'"
+          <button class="flex-1 pb-2.5 text-xs font-bold text-center border-b-2 transition"
+                  :class="modoAuth === 'login' ? 'border-sol text-white' : 'border-transparent text-slate-400 hover:text-white'"
                   @click="modoAuth = 'login'; errorAuth = ''">
             Iniciar sesión
           </button>
-          <button class="flex-1 pb-2.5 text-xs font-bold uppercase tracking-wider text-center border-b-2 transition"
-                  :class="modoAuth === 'registro' ? 'border-sky-500 text-sky-400' : 'border-transparent text-slate-400 hover:text-white'"
+          <button class="flex-1 pb-2.5 text-xs font-bold text-center border-b-2 transition"
+                  :class="modoAuth === 'registro' ? 'border-sol text-white' : 'border-transparent text-slate-400 hover:text-white'"
                   @click="modoAuth = 'registro'; errorAuth = ''">
             Crear cuenta
           </button>
@@ -146,41 +181,41 @@
         <!-- Formulario Login -->
         <form x-show="modoAuth === 'login'" @submit.prevent="ejecutarLogin()" class="space-y-3.5">
           <div>
-            <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1">Usuario:</label>
+            <label class="block text-xs font-semibold text-slate-300 mb-1">Usuario:</label>
             <input type="text" x-model="authForm.loginUser" required placeholder="ej. gabriel"
-                   class="w-full px-3 py-2 rounded-lg bg-slate-900 border border-slate-700 text-white text-xs focus:outline-none focus:border-sky-500">
+                   class="w-full px-3 py-2 rounded-lg bg-slate-900 border border-slate-700 text-white text-xs focus:outline-none focus:border-sol">
           </div>
           <div>
-            <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1">Contraseña:</label>
+            <label class="block text-xs font-semibold text-slate-300 mb-1">Contraseña:</label>
             <input type="password" x-model="authForm.loginPass" required placeholder="••••••••"
-                   class="w-full px-3 py-2 rounded-lg bg-slate-900 border border-slate-700 text-white text-xs focus:outline-none focus:border-sky-500">
+                   class="w-full px-3 py-2 rounded-lg bg-slate-900 border border-slate-700 text-white text-xs focus:outline-none focus:border-sol">
           </div>
           <button type="submit" :disabled="cargandoAuth"
-                  class="w-full py-2.5 rounded-lg bg-sky-600 hover:bg-sky-500 font-semibold text-white text-xs shadow transition mt-2 disabled:opacity-50">
-            <span x-text="cargandoAuth ? 'Autenticando...' : 'Entrar a la plataforma'"></span>
+                  class="boton boton-primario w-full mt-2">
+            <span x-text="cargandoAuth ? 'Iniciando sesión…' : 'Iniciar sesión'"></span>
           </button>
         </form>
 
         <!-- Formulario Registro -->
         <form x-show="modoAuth === 'registro'" @submit.prevent="ejecutarRegistro()" class="space-y-3">
           <div>
-            <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1">Nombre de usuario:</label>
+            <label class="block text-xs font-semibold text-slate-300 mb-1">Nombre de usuario:</label>
             <input type="text" x-model="authForm.regUser" required placeholder="ej. anngie"
-                   class="w-full px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-white text-xs focus:outline-none focus:border-sky-500">
+                   class="w-full px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-white text-xs focus:outline-none focus:border-sol">
           </div>
           <div>
-            <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1">Contraseña:</label>
+            <label class="block text-xs font-semibold text-slate-300 mb-1">Contraseña:</label>
             <input type="password" x-model="authForm.regPass" required placeholder="Mínimo 4 caracteres"
-                   class="w-full px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-white text-xs focus:outline-none focus:border-sky-500">
+                   class="w-full px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-white text-xs focus:outline-none focus:border-sol">
           </div>
           <div>
-            <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1">Nombre visible o cargo:</label>
+            <label class="block text-xs font-semibold text-slate-300 mb-1">Nombre visible o cargo:</label>
             <input type="text" x-model="authForm.regNombre" required placeholder="ej. Anngie Salazar"
-                   class="w-full px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-white text-xs focus:outline-none focus:border-sky-500">
+                   class="w-full px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-white text-xs focus:outline-none focus:border-sol">
           </div>
           <div class="grid grid-cols-2 gap-3">
             <div>
-              <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1">Color orbital:</label>
+              <label class="block text-xs font-semibold text-slate-300 mb-1">Color orbital:</label>
               <select x-model="authForm.regColor" class="w-full px-2 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-white text-xs focus:outline-none">
                 <option value="#0ea5e9">Azul acero</option>
                 <option value="#0284c7">Cian profundo</option>
@@ -190,7 +225,7 @@
               </select>
             </div>
             <div>
-              <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1">Canal:</label>
+              <label class="block text-xs font-semibold text-slate-300 mb-1">Canal:</label>
               <select x-model="authForm.regCanal" class="w-full px-2 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-white text-xs focus:outline-none">
                 <option value="texto">Texto y notas</option>
                 <option value="voz">Voz en llamada</option>
@@ -198,7 +233,7 @@
             </div>
           </div>
           <button type="submit" :disabled="cargandoAuth"
-                  class="w-full py-2.5 rounded-lg bg-sky-600 hover:bg-sky-500 font-semibold text-white text-xs shadow transition mt-2 disabled:opacity-50">
+                  class="boton boton-primario w-full mt-2">
             <span x-text="cargandoAuth ? 'Registrando cuenta...' : 'Registrar cuenta y acceder'"></span>
           </button>
         </form>
@@ -207,18 +242,18 @@
 
     <!-- 3. PANTALLA: LOBBY DE SALAS Y REUNIONES PENDIENTES -->
     <section x-show="vista === 'salas'" class="max-w-3xl w-full mx-auto" x-transition>
-      <div class="flex items-center justify-between mb-5">
-        <div>
-          <h2 class="text-xl font-bold text-white">Mis reuniones y deliberaciones</h2>
+      <div class="flex flex-wrap items-end justify-between gap-4 mb-6">
+        <div class="min-w-0 flex-1 basis-80">
+          <h2 class="titulo-pantalla mb-1">Mis reuniones y deliberaciones</h2>
           <p class="text-xs text-slate-400">Accede a tus sesiones programadas, planifica tus intervenciones o crea una nueva sala.</p>
         </div>
-        <div class="flex gap-2">
-          <button class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-slate-200 border border-slate-700 transition flex items-center gap-1.5"
+        <div class="flex gap-2 shrink-0 whitespace-nowrap">
+          <button class="boton boton-secundario"
                   @click="mostrarModalGuardarEnlace = true">
             <i data-lucide="bookmark-plus" class="w-3.5 h-3.5"></i>
             <span>Guardar enlace</span>
           </button>
-          <button class="px-3.5 py-1.5 rounded-lg bg-sky-600 hover:bg-sky-500 text-xs font-semibold text-white transition flex items-center gap-1.5"
+          <button class="boton boton-primario"
                   @click="navegarA('crear')">
             <i data-lucide="plus" class="w-3.5 h-3.5"></i>
             <span>Nueva sala</span>
@@ -229,8 +264,8 @@
       <!-- Barra rápida de acceso por código -->
       <div class="tarjeta-vidrio rounded-xl p-3 mb-6 flex gap-2.5">
         <input type="text" x-ref="inputCodigo" placeholder="Código de sala (ej. ORB-4821)"
-               class="flex-1 px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-white uppercase text-xs focus:outline-none focus:border-sky-500 font-mono">
-        <button class="px-4 py-1.5 rounded-lg bg-sky-600 hover:bg-sky-500 text-white font-semibold text-xs transition"
+               class="flex-1 px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-white uppercase text-xs focus:outline-none focus:border-sol font-mono">
+        <button class="boton boton-primario"
                 @click="ingresarASala($refs.inputCodigo.value.trim())">
           Conectar
         </button>
@@ -239,7 +274,7 @@
       <!-- Listado de reuniones programadas y guardadas -->
       <div class="space-y-3">
         <div class="flex items-center justify-between">
-          <h3 class="text-xs font-bold uppercase tracking-wider text-slate-300">Reuniones registradas en tu cuenta:</h3>
+          <h3 class="text-xs font-bold text-slate-300">Reuniones registradas en tu cuenta:</h3>
           <button @click="cargarMisReuniones()" class="text-xs text-sky-400 hover:text-sky-300 flex items-center gap-1">
             <i data-lucide="refresh-cw" class="w-3 h-3"></i>
             <span>Actualizar</span>
@@ -257,35 +292,35 @@
             <div class="tarjeta-vidrio rounded-xl p-4 flex flex-col justify-between border border-slate-800 hover:border-slate-700 transition">
               <div>
                 <div class="flex items-center justify-between mb-2">
-                  <span class="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-slate-800 text-sky-400 border border-slate-700"
+                  <span class="text-xs font-mono font-bold px-2 py-0.5 rounded bg-slate-800 text-sky-400 border border-slate-700"
                         x-text="reu.codigo"></span>
-                  <span class="text-[10px] px-2 py-0.5 rounded text-amber-400 bg-amber-950/40 border border-amber-900/50"
+                  <span class="text-xs px-2 py-0.5 rounded text-amber-400 bg-amber-950/40 border border-amber-900/50"
                         x-text="reu.fecha_programada || 'Horario flexible'"></span>
                 </div>
                 <h4 class="font-bold text-white text-sm mb-1 leading-snug" x-text="reu.nombre"></h4>
-                <p class="text-[11px] text-slate-400 mb-3" x-show="reu.anfitrion_nombre">
+                <p class="text-xs text-slate-400 mb-3" x-show="reu.anfitrion_nombre">
                   Anfitrión: <strong class="text-slate-300" x-text="reu.anfitrion_nombre"></strong>
                 </p>
               </div>
 
               <div class="pt-2 border-t border-slate-800 flex items-center justify-between gap-1 text-xs">
                 <div class="flex gap-1">
-                  <button @click="copiarCodigoReunion(reu.codigo)" title="Copiar código"
+                  <button @click="copiarCodigoReunion(reu.codigo)" title="Copiar código" aria-label="Copiar código"
                           class="p-1.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition">
                     <i data-lucide="copy" class="w-3.5 h-3.5"></i>
                   </button>
-                  <button @click="copiarEnlaceReunion(reu.codigo)" title="Compartir enlace completo"
+                  <button @click="copiarEnlaceReunion(reu.codigo)" title="Compartir enlace completo" aria-label="Copiar enlace de la reunión"
                           class="p-1.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition">
                     <i data-lucide="share-2" class="w-3.5 h-3.5"></i>
                   </button>
                   <button @click="abrirPlanificarSpeech(reu)" title="Planificar speech / notas"
-                          class="px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-sky-400 hover:text-sky-300 text-[11px] font-medium transition flex items-center gap-1">
+                          class="px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-sky-400 hover:text-sky-300 text-xs font-medium transition flex items-center gap-1">
                     <i data-lucide="mic" class="w-3 h-3"></i>
                     <span>Speech</span>
                   </button>
                 </div>
                 <button @click="ingresarASala(reu.codigo)"
-                        class="px-3 py-1 rounded bg-sky-600 hover:bg-sky-500 font-semibold text-white text-[11px] transition flex items-center gap-1">
+                        class="boton boton-primario boton-compacto">
                   <span>Ingresar</span>
                   <i data-lucide="arrow-right" class="w-3 h-3"></i>
                 </button>
@@ -299,34 +334,34 @@
     <!-- 4. PANTALLA: CREAR SALA -->
     <section x-show="vista === 'crear'" class="max-w-md w-full mx-auto" x-transition>
       <div class="tarjeta-vidrio rounded-2xl p-6">
-        <h2 class="text-lg font-bold text-white mb-1.5">Crear sala de deliberación</h2>
+        <h2 class="titulo-pantalla mb-2">Crear sala de deliberación</h2>
         <p class="text-xs text-slate-400 mb-5">Define la agenda base para estructurar los tiempos de participación.</p>
 
         <form @submit.prevent="crearSala($refs.crearNombre.value, $refs.crearAgenda.value, 'suave')" class="space-y-3.5">
           <div>
-            <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1">Nombre de la sesión:</label>
+            <label class="block text-xs font-semibold text-slate-300 mb-1">Nombre de la sesión:</label>
             <input type="text" x-ref="crearNombre" required placeholder="Ej. Revisión de Arquitectura de Sistemas"
-                   class="w-full px-3 py-2 rounded-lg bg-slate-900 border border-slate-700 text-white focus:outline-none focus:border-sky-500 text-xs">
+                   class="w-full px-3 py-2 rounded-lg bg-slate-900 border border-slate-700 text-white focus:outline-none focus:border-sol text-xs">
           </div>
 
           <div>
-            <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1">Fecha u horario programado (opcional):</label>
+            <label class="block text-xs font-semibold text-slate-300 mb-1">Fecha u horario programado (opcional):</label>
             <input type="text" x-model="fechaProgramadaInput" placeholder="Ej. Hoy 15:00 hrs o 2026-11-20 10:00"
-                   class="w-full px-3 py-2 rounded-lg bg-slate-900 border border-slate-700 text-white focus:outline-none focus:border-sky-500 text-xs">
+                   class="w-full px-3 py-2 rounded-lg bg-slate-900 border border-slate-700 text-white focus:outline-none focus:border-sol text-xs">
           </div>
 
           <div>
-            <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1">Agenda inicial (un punto por línea):</label>
-            <textarea x-ref="crearAgenda" rows="3" required class="w-full px-3 py-2 rounded-lg bg-slate-900 border border-slate-700 text-white focus:outline-none focus:border-sky-500 text-xs">Alineación y contexto inicial
+            <label class="block text-xs font-semibold text-slate-300 mb-1">Agenda inicial (un punto por línea):</label>
+            <textarea x-ref="crearAgenda" rows="3" required class="w-full px-3 py-2 rounded-lg bg-slate-900 border border-slate-700 text-white focus:outline-none focus:border-sol text-xs">Alineación y contexto inicial
 Discusión de propuestas
 Acuerdos y cierre</textarea>
           </div>
 
           <div class="flex gap-2.5 pt-2">
-            <button type="button" class="w-1/3 py-2 rounded-lg bg-slate-800 text-slate-300 text-xs hover:text-white" @click="navegarA('salas')">
+            <button type="button" class="boton boton-secundario w-1/3" @click="navegarA('salas')">
               Cancelar
             </button>
-            <button type="submit" class="w-2/3 py-2 rounded-lg bg-sky-600 hover:bg-sky-500 font-semibold text-white text-xs">
+            <button type="submit" class="boton boton-primario w-2/3">
               Crear sala
             </button>
           </div>
@@ -339,11 +374,11 @@ Acuerdos y cierre</textarea>
       <div class="tarjeta-vidrio rounded-2xl p-6">
         <div class="flex items-center justify-between border-b border-slate-800 pb-3 mb-4">
           <div>
-            <span class="text-[11px] font-bold text-sky-400 uppercase tracking-wider">Planificación previa de intervención</span>
-            <h2 class="text-lg font-bold text-white mt-0.5" x-text="reunionSeleccionadaPlan ? reunionSeleccionadaPlan.nombre : 'Reunión'"></h2>
+            <span class="text-xs font-bold text-sky-400">Planificación previa de intervención</span>
+            <h2 class="titulo-pantalla mt-1" x-text="reunionSeleccionadaPlan ? reunionSeleccionadaPlan.nombre : 'Reunión'"></h2>
             <p class="text-xs text-slate-400">Código de sesión: <span class="text-sky-300 font-mono font-bold" x-text="reunionSeleccionadaPlan ? reunionSeleccionadaPlan.codigo : ''"></span></p>
           </div>
-          <button @click="navegarA('salas')" class="text-xs px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300">
+          <button @click="navegarA('salas')" class="boton boton-secundario">
             Volver a salas
           </button>
         </div>
@@ -351,55 +386,55 @@ Acuerdos y cierre</textarea>
         <div class="space-y-4">
           <div>
             <div class="flex items-center justify-between mb-1.5">
-              <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider">
+              <label class="block text-xs font-semibold text-slate-300">
                 Tu speech, argumentos y notas de intervención:
               </label>
               <div class="flex items-center gap-2">
                 <button type="button" @click="alternarDictadoPorVoz('speech')"
-                        class="px-2 py-0.5 rounded text-[11px] font-medium transition flex items-center gap-1 border"
+                        class="px-2 py-0.5 rounded text-xs font-medium transition flex items-center gap-1 border"
                         :class="dictandoEn === 'speech' ? 'bg-rose-500/20 border-rose-500/50 text-rose-300 animate-pulse' : 'bg-slate-800 border-slate-700 text-slate-300 hover:text-white'">
                   <i data-lucide="mic" class="w-3 h-3"></i>
                   <span x-text="dictandoEn === 'speech' ? 'Escuchando...' : 'Dictar por voz'"></span>
                 </button>
-                <span class="text-[11px] text-sky-400 font-semibold flex items-center gap-1">
+                <span class="text-xs text-sky-400 font-semibold flex items-center gap-1">
                   <i data-lucide="sparkles" class="w-3.5 h-3.5"></i>
                   <span>Gemini Flash</span>
                 </span>
               </div>
             </div>
-            <p class="text-[11px] text-slate-400 mb-2">
+            <p class="text-xs text-slate-400 mb-2">
               Escribe tus ideas clave o pide al agente que redacte y optimice una propuesta estructurada.
             </p>
             <textarea x-model="speechPlanTexto" rows="6" placeholder="Escribe aquí tu discurso, argumentos centrales, datos de respaldo o propuestas que deseas plantear en la reunión..."
-                      class="w-full px-3 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white focus:outline-none focus:border-sky-500 text-xs leading-relaxed font-sans"></textarea>
+                      class="w-full px-3 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white focus:outline-none focus:border-sol text-xs leading-relaxed font-sans"></textarea>
           </div>
 
           <!-- Acciones de asistencia con IA para speech -->
           <div class="p-3 rounded-xl bg-slate-900/60 border border-slate-800 space-y-2.5">
-            <span class="text-[10px] font-bold uppercase tracking-wider text-amber-400 block">
+            <span class="text-xs font-bold text-amber-400 block">
               Optimización con agente de inteligencia artificial:
             </span>
             <div class="flex flex-wrap gap-1.5">
               <button @click="asistirSpeechConIa('Estructurar propuesta en 3 puntos claros y concisos')"
                       :disabled="cargandoIaSpeech"
-                      class="px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-[11px] transition">
+                      class="boton boton-secundario boton-compacto">
                 3 puntos claros
               </button>
               <button @click="asistirSpeechConIa('Hacer el discurso más ejecutivo, persuasivo y breve')"
                       :disabled="cargandoIaSpeech"
-                      class="px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-[11px] transition">
+                      class="boton boton-secundario boton-compacto">
                 Más ejecutivo y breve
               </button>
               <button @click="asistirSpeechConIa('Redactar apertura y propuesta constructiva desde cero')"
                       :disabled="cargandoIaSpeech"
-                      class="px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-[11px] transition">
+                      class="boton boton-secundario boton-compacto">
                 Generar borrador nuevo
               </button>
             </div>
 
             <div class="flex gap-1.5 pt-1">
               <input type="text" x-model="solicitudIaSpeechInput" placeholder="O escribe una instrucción específica para la IA..."
-                     class="flex-1 px-2.5 py-1.5 bg-slate-950 border border-slate-800 rounded-lg text-xs text-white focus:outline-none focus:border-sky-500">
+                     class="flex-1 px-2.5 py-1.5 bg-slate-950 border border-slate-800 rounded-lg text-xs text-white focus:outline-none focus:border-sol">
               <button type="button" @click="alternarDictadoPorVoz('speech_instruccion')"
                       class="px-2 py-1.5 rounded-lg border text-xs transition"
                       :class="dictandoEn === 'speech_instruccion' ? 'bg-rose-500/20 border-rose-500/50 text-rose-300 animate-pulse' : 'bg-slate-800 border-slate-700 text-slate-400 hover:text-white'"
@@ -407,7 +442,7 @@ Acuerdos y cierre</textarea>
                 <i data-lucide="mic" class="w-3.5 h-3.5"></i>
               </button>
               <button @click="asistirSpeechConIa()" :disabled="cargandoIaSpeech"
-                      class="px-3 py-1.5 bg-sky-600 hover:bg-sky-500 text-white rounded-lg text-xs font-semibold flex items-center gap-1 disabled:opacity-50">
+                      class="boton boton-primario">
                 <i data-lucide="sparkles" class="w-3.5 h-3.5"></i>
                 <span x-text="cargandoIaSpeech ? 'Procesando...' : 'Asistir'"></span>
               </button>
@@ -419,26 +454,26 @@ Acuerdos y cierre</textarea>
                 <div class="flex items-center justify-between">
                   <strong class="text-sky-300 text-xs">Propuesta generada por la IA:</strong>
                   <button @click="aplicarSpeechOptimizado()"
-                          class="px-2.5 py-0.5 rounded bg-sky-600 hover:bg-sky-500 text-white font-semibold text-[10px] transition">
+                          class="boton boton-primario boton-compacto">
                     Adoptar en mi borrador
                   </button>
                 </div>
                 <p class="text-slate-200 text-xs leading-relaxed whitespace-pre-line" x-text="resultadoIaSpeech.speech_optimizado"></p>
                 <template x-if="resultadoIaSpeech.consejo_oratoria">
-                  <p class="text-[11px] text-amber-300 italic pt-1 border-t border-sky-900/60" x-text="`Consejo: ${resultadoIaSpeech.consejo_oratoria}`"></p>
+                  <p class="text-xs text-amber-300 italic pt-1 border-t border-sky-900/60" x-text="`Consejo: ${resultadoIaSpeech.consejo_oratoria}`"></p>
                 </template>
               </div>
             </template>
           </div>
 
           <div class="flex items-center justify-between pt-2 border-t border-slate-800">
-            <span class="text-[11px] text-slate-500">Guardado persistente en SQLite</span>
+            <span class="text-xs text-slate-500">Guardado persistente en SQLite</span>
             <div class="flex gap-2">
-              <button @click="navegarA('salas')" class="px-3.5 py-1.5 rounded-lg bg-slate-800 text-slate-300 text-xs hover:text-white">
+              <button @click="navegarA('salas')" class="boton boton-secundario">
                 Cancelar
               </button>
               <button @click="guardarSpeech()" :disabled="guardandoSpeech"
-                      class="px-4 py-1.5 rounded-lg bg-sky-600 hover:bg-sky-500 font-semibold text-white text-xs transition flex items-center gap-1.5">
+                      class="boton boton-primario">
                 <i data-lucide="save" class="w-3.5 h-3.5"></i>
                 <span x-text="guardandoSpeech ? 'Guardando...' : 'Guardar speech'"></span>
               </button>
@@ -453,11 +488,11 @@ Acuerdos y cierre</textarea>
       <div class="tarjeta-vidrio rounded-2xl p-6">
         <div class="flex items-center justify-between border-b border-slate-800 pb-3.5 mb-5">
           <div>
-            <span class="text-[11px] font-bold text-amber-500 uppercase tracking-wider">Sala de espera (P12)</span>
-            <h2 class="text-xl font-bold text-white mt-0.5" x-text="salaActual ? salaActual.nombre : 'Sala'"></h2>
+            <span class="text-xs font-bold text-amber-500">Sala de espera</span>
+            <h2 class="titulo-pantalla mt-1" x-text="salaActual ? salaActual.nombre : 'Sala'"></h2>
             <p class="text-xs text-slate-400 mt-0.5">Código de acceso: <span class="text-sky-400 font-mono font-bold" x-text="salaActual ? salaActual.codigo : ''"></span></p>
           </div>
-          <button class="px-4 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs transition flex items-center gap-1.5"
+          <button class="boton boton-primario"
                   @click="navegarA('reunion')">
             <span>Ingresar a la reunión</span>
             <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>
@@ -465,7 +500,7 @@ Acuerdos y cierre</textarea>
         </div>
 
         <div class="flex items-center justify-between mb-2.5">
-          <h3 class="text-xs font-semibold text-slate-300 uppercase tracking-wider">Agenda de la sesión:</h3>
+          <h3 class="text-xs font-semibold text-slate-300">Agenda de la sesión:</h3>
           <button @click="mostrarAgregarTema = !mostrarAgregarTema" class="text-xs font-semibold text-sky-400 hover:text-sky-300 flex items-center gap-1">
             <i data-lucide="plus" class="w-3.5 h-3.5"></i>
             <span>Añadir tema</span>
@@ -476,7 +511,7 @@ Acuerdos y cierre</textarea>
         <div x-show="mostrarAgregarTema" x-transition class="mb-3 p-2.5 rounded-lg bg-slate-900 border border-slate-700 flex gap-2">
           <input type="text" x-model="nuevoTemaInput" placeholder="Nuevo tema de deliberación..."
                  class="flex-1 px-2.5 py-1 bg-slate-950 border border-slate-800 rounded text-xs text-white focus:outline-none">
-          <button @click="agregarTema()" class="px-3 py-1 bg-sky-600 text-white rounded text-xs font-semibold">
+          <button @click="agregarTema()" class="boton boton-primario boton-compacto">
             Guardar
           </button>
         </div>
@@ -485,7 +520,7 @@ Acuerdos y cierre</textarea>
           <template x-for="(tema, idx) in (salaActual ? salaActual.agenda : [])" :key="tema.id">
             <div class="p-3 rounded-lg bg-slate-900/50 border border-slate-800 flex items-center justify-between text-xs">
               <div>
-                <span class="text-[10px] text-sky-400 font-semibold" x-text="`Tema ${idx + 1}`"></span>
+                <span class="text-xs text-sky-400 font-semibold" x-text="`Tema ${idx + 1}`"></span>
                 <h4 class="text-xs font-semibold text-white" x-text="tema.titulo"></h4>
               </div>
             </div>
@@ -495,68 +530,92 @@ Acuerdos y cierre</textarea>
     </section>
 
     <!-- 6. PANTALLA: REUNIÓN EN VIVO (CHAT GRUPAL + CHAT CON AGENTE + FORMATO DE APORTE EDITABLE) -->
-    <section x-show="vista === 'reunion'" class="w-full flex-1 flex flex-col h-[calc(100vh-4.5rem)]" x-transition>
+    <section x-show="vista === 'reunion'" class="sala-reunion w-full flex-1 flex flex-col" x-transition>
 
-      <!-- Barra de navegación contextual de la reunión -->
-      <div class="flex items-center justify-between mb-2.5 px-1">
-        <div class="flex items-center gap-2">
-          <!-- Botón de panel lateral -->
-          <button @click="panelLateralAbierto = !panelLateralAbierto"
-                  class="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs flex items-center gap-1.5 border border-slate-700">
-            <i data-lucide="sidebar" class="w-3.5 h-3.5"></i>
-            <span x-text="panelLateralAbierto ? 'Ocultar panel' : 'Mostrar panel'"></span>
+      <div class="barra-reunion mb-3">
+        <!-- Cambio de vista del panel central (escritorio) -->
+        <div class="barra-reunion-escritorio selector-vista" role="group" aria-label="Vista del panel central">
+          <button type="button" class="opcion-vista" :aria-pressed="pestañaCentro === 'radar'"
+                  @click="mostrarPanelReunion('radar')">
+            <i data-lucide="orbit" class="w-4 h-4"></i><span>Sistema solar</span>
           </button>
-
-          <!-- Alternar vista central: Radar vs Aportes Oficiales -->
-          <div class="flex rounded-lg bg-slate-900 border border-slate-800 p-0.5 text-xs">
-            <button class="px-2.5 py-1 rounded-md transition"
-                    :class="pestañaCentro === 'radar' ? 'bg-sky-600 text-white font-semibold' : 'text-slate-400 hover:text-white'"
-                    @click="pestañaCentro = 'radar'">
-              Radar orbital
-            </button>
-            <button class="px-2.5 py-1 rounded-md transition"
-                    :class="pestañaCentro === 'aportes' ? 'bg-sky-600 text-white font-semibold' : 'text-slate-400 hover:text-white'"
-                    @click="pestañaCentro = 'aportes'">
-              Aportes oficiales
-            </button>
-          </div>
+          <button type="button" class="opcion-vista" :aria-pressed="pestañaCentro === 'aportes'"
+                  @click="mostrarPanelReunion('aportes')">
+            <i data-lucide="layout-list" class="w-4 h-4"></i><span>Aportes oficiales</span>
+          </button>
         </div>
 
-        <div class="flex items-center gap-2 text-xs">
-          <!-- Botones de copiar código y enlace de reunión -->
-          <div class="flex items-center gap-1 bg-slate-900/80 px-2 py-1 rounded-lg border border-slate-800">
-            <span class="font-mono text-sky-400 font-bold" x-text="salaActual ? salaActual.codigo : ''"></span>
-            <button @click="copiarCodigoReunion(salaActual.codigo)" title="Copiar código de reunión"
-                    class="p-1 rounded hover:bg-slate-800 text-slate-400 hover:text-white transition">
-              <i data-lucide="copy" class="w-3 h-3"></i>
-            </button>
-            <button @click="copiarEnlaceReunion(salaActual.codigo)" title="Copiar enlace directo"
-                    class="p-1 rounded hover:bg-slate-800 text-slate-400 hover:text-white transition">
-              <i data-lucide="share-2" class="w-3 h-3"></i>
-            </button>
-          </div>
-
-          <div class="hidden sm:flex items-center gap-1.5 bg-slate-900/80 px-2.5 py-1 rounded-lg border border-slate-800">
-            <span class="text-amber-400 font-bold">Tema:</span>
-            <span class="text-slate-200" x-text="salaActual && salaActual.tema_activo ? salaActual.tema_activo.titulo : 'General'"></span>
-          </div>
-          <div class="flex items-center gap-1.5 bg-slate-900/80 px-2.5 py-1 rounded-lg border border-slate-800">
-            <span class="text-sky-400 font-bold">Balance:</span>
-            <span class="text-slate-100 font-bold" x-text="`${salaActual ? salaActual.indice_equilibrio : 100}%`"></span>
-          </div>
+        <!-- Tema activo y equilibrio de la conversación -->
+        <div class="tema-actual" aria-live="polite">
+          <span class="tema-actual-sol" aria-hidden="true"></span>
+          <span class="tema-reunion" x-text="salaActual?.tema_activo?.titulo || 'General'"></span>
+          <span class="equilibrio" :title="`Equilibrio de la participación: ${salaActual?.indice_equilibrio ?? 100} %`">
+            <span class="equilibrio-etiqueta">Equilibrio</span>
+            <span class="equilibrio-barra" aria-hidden="true">
+              <span :style="`width: ${Math.max(0, Math.min(100, salaActual?.indice_equilibrio ?? 100))}%`"></span>
+            </span>
+            <span class="equilibrio-cifra" x-text="`${salaActual?.indice_equilibrio ?? 100} %`"></span>
+          </span>
         </div>
+
+        <div class="acciones-reunion">
+          <details class="compartir-reunion relative" @keydown.escape="$el.open = false" @click.outside="$el.open = false">
+            <summary class="boton boton-secundario" aria-label="Compartir la sala">
+              <i data-lucide="share-2" class="w-4 h-4"></i><span class="texto-opcional">Compartir</span>
+            </summary>
+            <div class="menu-compartir">
+              <p class="menu-compartir-codigo" x-text="`Sala ${salaActual?.codigo || ''}`"></p>
+              <button type="button" class="boton boton-secundario w-full" @click="copiarCodigoReunion(salaActual.codigo)">Copiar código</button>
+              <button type="button" class="boton boton-secundario w-full" @click="copiarEnlaceReunion(salaActual.codigo)">Copiar enlace</button>
+            </div>
+          </details>
+          <button type="button" class="boton boton-primario publicar-reunion"
+                  @click="abrirBorradorAporte()" :disabled="cargandoFormatoAporte">
+            <i data-lucide="plus" class="w-4 h-4"></i><span>Publicar aporte</span>
+          </button>
+          <button type="button" class="boton boton-icono barra-reunion-escritorio"
+                  @click="panelLateralAbierto = !panelLateralAbierto" :aria-expanded="panelLateralAbierto"
+                  :aria-label="panelLateralAbierto ? 'Ocultar panel lateral' : 'Mostrar panel lateral'"
+                  :title="panelLateralAbierto ? 'Ocultar panel lateral' : 'Mostrar panel lateral'">
+            <i data-lucide="panel-right-close" class="w-4 h-4" x-show="panelLateralAbierto"></i>
+            <i data-lucide="panel-right-open" class="w-4 h-4" x-show="!panelLateralAbierto"></i>
+          </button>
+        </div>
+
+        <!-- Navegación entre paneles (móvil) -->
+        <nav class="navegacion-reunion-movil selector-vista" aria-label="Vistas de la reunión">
+          <button type="button" class="opcion-vista" :aria-pressed="panelReunionMovil === 'centro' && pestañaCentro === 'radar'"
+                  @click="mostrarPanelReunion('radar')">
+            <i data-lucide="orbit" class="w-4 h-4"></i><span>Sistema</span>
+          </button>
+          <button type="button" class="opcion-vista" :aria-pressed="panelReunionMovil === 'lateral' && pestañaLateral !== 'agenda'"
+                  @click="mostrarPanelReunion('chat')">
+            <i data-lucide="message-square" class="w-4 h-4"></i><span>Chat</span>
+          </button>
+          <button type="button" class="opcion-vista" :aria-pressed="panelReunionMovil === 'lateral' && pestañaLateral === 'agenda'"
+                  @click="mostrarPanelReunion('agenda')">
+            <i data-lucide="list-ordered" class="w-4 h-4"></i><span>Agenda</span>
+          </button>
+          <button type="button" class="opcion-vista" :aria-pressed="panelReunionMovil === 'centro' && pestañaCentro === 'aportes'"
+                  @click="mostrarPanelReunion('aportes')">
+            <i data-lucide="layout-list" class="w-4 h-4"></i><span>Aportes</span>
+          </button>
+        </nav>
       </div>
 
-      <!-- Área de deliberación en 2 paneles -->
-      <div class="grid gap-3 flex-1 overflow-hidden" :class="panelLateralAbierto ? 'grid-cols-1 lg:grid-cols-3' : 'grid-cols-1'">
+      <div class="paneles-reunion grid gap-3 flex-1" :data-panel="panelReunionMovil"
+           :class="panelLateralAbierto ? 'grid-cols-1 lg:grid-cols-3' : 'grid-cols-1'">
 
         <!-- Panel central principal -->
-        <div class="tarjeta-vidrio rounded-xl p-3 flex flex-col items-center justify-center relative overflow-hidden"
+        <div class="panel-reunion-centro tarjeta-vidrio rounded-xl p-3 flex flex-col items-center justify-center relative overflow-hidden"
              :class="panelLateralAbierto ? 'lg:col-span-2' : 'col-span-1'">
 
-          <!-- Vista 1: Radar Orbital D3 -->
+          <!-- Galaxia detrás del sistema solar; se oculta con baja estimulación -->
+          <canvas x-show="pestañaCentro === 'radar'" class="cielo cielo-reunion" data-intensidad="0.75" aria-hidden="true"></canvas>
+
+          <!-- Vista 1: sistema solar de la reunión -->
           <div x-show="pestañaCentro === 'radar'" class="w-full h-full flex items-center justify-center relative">
-            <div id="lienzo-orbital" class="w-full max-w-[450px] aspect-square flex items-center justify-center"></div>
+            <div id="lienzo-orbital" class="w-full max-w-[580px] max-h-full aspect-square flex items-center justify-center"></div>
 
             <!-- Ficha contextual de participante en radar -->
             <template x-if="fichaParticipante">
@@ -570,19 +629,19 @@ Acuerdos y cierre</textarea>
                 </div>
 
                 <div class="space-y-1 mb-2.5 text-slate-300">
-                  <p class="text-[11px] flex justify-between">
+                  <p class="text-xs flex justify-between">
                     <span>Participación relativa:</span>
                     <strong class="text-sky-400 font-bold" x-text="`${Math.round((fichaParticipante.share || 0)*100)}%`"></strong>
                   </p>
-                  <p class="text-[11px] flex justify-between" x-show="fichaParticipante.es_anfitrion">
+                  <p class="text-xs flex justify-between" x-show="fichaParticipante.es_anfitrion">
                     <span class="text-amber-400 font-semibold">Rol en la sala:</span>
-                    <span class="px-1.5 py-0.2 rounded bg-amber-950/60 border border-amber-800 text-amber-300 text-[10px]">Anfitrión</span>
+                    <span class="px-1.5 py-0.2 rounded bg-amber-950/60 border border-amber-800 text-amber-300 text-xs">Anfitrión</span>
                   </p>
                 </div>
 
                 <!-- Botón de invitar a participar: EXCLUSIVO si el usuario actual es anfitrión y no es él mismo -->
                 <template x-if="esAnfitrion() && usuario && fichaParticipante.id !== usuario.id">
-                  <button class="w-full py-1.5 rounded-lg bg-sky-600 hover:bg-sky-500 font-semibold text-white text-xs transition flex items-center justify-center gap-1.5 shadow"
+                  <button class="boton boton-primario w-full"
                           @click="invitarParticipanteSeleccionado(fichaParticipante)">
                     <i data-lucide="user-plus" class="w-3.5 h-3.5"></i>
                     <span>Invitar a participar</span>
@@ -590,7 +649,7 @@ Acuerdos y cierre</textarea>
                 </template>
 
                 <template x-if="!esAnfitrion() && usuario && fichaParticipante.id !== usuario.id">
-                  <div class="text-[11px] text-slate-400 text-center py-1 bg-slate-950/50 rounded border border-slate-800/80">
+                  <div class="text-xs text-slate-400 text-center py-1 bg-slate-950/50 rounded border border-slate-800/80">
                     Participante activo en la sala
                   </div>
                 </template>
@@ -602,10 +661,10 @@ Acuerdos y cierre</textarea>
           <div x-show="pestañaCentro === 'aportes'" class="w-full h-full flex flex-col p-2 overflow-y-auto">
             <div class="flex items-center justify-between mb-2.5 border-b border-slate-800 pb-2">
               <div>
-                <h3 class="text-xs font-bold uppercase tracking-wider text-slate-300">Aportes y propuestas oficiales</h3>
-                <span class="text-[11px] text-slate-400">Despliega o contrae cada aporte para revisar sus puntos de acción</span>
+                <h3 class="text-xs font-bold text-slate-300">Aportes y propuestas oficiales</h3>
+                <span class="text-xs text-slate-400">Despliega o contrae cada aporte para revisar sus puntos de acción</span>
               </div>
-              <button @click="pestañaLateral = 'agente'; panelLateralAbierto = true;" class="text-xs text-sky-400 hover:text-sky-300 font-semibold flex items-center gap-1">
+              <button @click="pestañaLateral = 'agente'; panelLateralAbierto = true; panelReunionMovil = 'lateral';" class="text-xs text-sky-400 hover:text-sky-300 font-semibold flex items-center gap-1">
                 <i data-lucide="plus" class="w-3.5 h-3.5"></i>
                 <span>Redactar propuesta con IA</span>
               </button>
@@ -628,12 +687,12 @@ Acuerdos y cierre</textarea>
                       <div class="w-2 h-2 rounded-full flex-shrink-0" :style="`background-color: ${item.color || '#38bdf8'}`"></div>
                       <div class="min-w-0">
                         <span class="font-bold text-white text-xs block truncate" x-text="item.titulo || 'Aporte deliberativo'"></span>
-                        <span class="text-[11px] text-slate-400" x-text="`${item.nombre} · ${new Date(item.timestamp * 1000).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}`"></span>
+                        <span class="text-xs text-slate-400" x-text="`${item.nombre} · ${new Date(item.timestamp * 1000).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}`"></span>
                       </div>
                     </div>
 
                     <div class="flex items-center gap-2 flex-shrink-0">
-                      <span x-show="item.impacto_estimado" class="px-2 py-0.5 rounded bg-slate-800 text-[10px] text-sky-300 font-medium border border-slate-700"
+                      <span x-show="item.impacto_estimado" class="px-2 py-0.5 rounded bg-slate-800 text-xs text-sky-300 font-medium border border-slate-700"
                             x-text="`Impacto ${item.impacto_estimado}`"></span>
                       <i data-lucide="chevron-down" class="w-4 h-4 text-slate-400 transition-transform duration-200"
                          :class="aporteDesplegadoId === item.id ? 'rotate-180 text-sky-400' : ''"></i>
@@ -647,10 +706,10 @@ Acuerdos y cierre</textarea>
                     <!-- Puntos clave si existen -->
                     <template x-if="item.puntos_clave && item.puntos_clave.length > 0">
                       <div class="mt-2.5 pt-2 border-t border-slate-800/60">
-                        <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1.5">Puntos clave y acciones:</span>
+                        <span class="text-xs font-bold text-slate-400 block mb-1.5">Puntos clave y acciones:</span>
                         <ul class="space-y-1 pl-1">
                           <template x-for="(pt, pIdx) in item.puntos_clave" :key="pIdx">
-                            <li class="text-[11px] text-slate-300 flex items-start gap-1.5">
+                            <li class="text-xs text-slate-300 flex items-start gap-1.5">
                               <span class="text-sky-400 font-bold">•</span>
                               <span x-text="pt"></span>
                             </li>
@@ -667,30 +726,30 @@ Acuerdos y cierre</textarea>
 
         <!-- Panel lateral colapsable (Nivel 1: Pestañas / Nivel 2: Contenido) -->
         <div x-show="panelLateralAbierto" x-transition
-             class="tarjeta-vidrio rounded-xl flex flex-col overflow-hidden h-full">
+             class="panel-reunion-lateral tarjeta-vidrio rounded-xl flex flex-col overflow-hidden">
 
           <!-- Pestañas Nivel 1 -->
           <div class="flex border-b border-slate-800 bg-slate-900/60">
-            <button class="flex-1 py-2 text-xs font-bold uppercase tracking-wider text-center border-b-2 transition flex items-center justify-center gap-1.5"
-                    :class="pestañaLateral === 'chat' ? 'border-sky-500 text-sky-400 bg-slate-800/40' : 'border-transparent text-slate-400 hover:text-white'"
+            <button class="flex-1 py-2 text-xs font-bold text-center border-b-2 transition flex items-center justify-center gap-1.5"
+                    :class="pestañaLateral === 'chat' ? 'border-sol text-white bg-slate-800/40' : 'border-transparent text-slate-400 hover:text-white'"
                     @click="pestañaLateral = 'chat'">
               <i data-lucide="message-square" class="w-3.5 h-3.5"></i>
               <span>Chat</span>
             </button>
-            <button class="flex-1 py-2 text-xs font-bold uppercase tracking-wider text-center border-b-2 transition flex items-center justify-center gap-1.5"
-                    :class="pestañaLateral === 'agente' ? 'border-sky-500 text-sky-400 bg-slate-800/40' : 'border-transparent text-slate-400 hover:text-white'"
+            <button class="flex-1 py-2 text-xs font-bold text-center border-b-2 transition flex items-center justify-center gap-1.5"
+                    :class="pestañaLateral === 'agente' ? 'border-sol text-white bg-slate-800/40' : 'border-transparent text-slate-400 hover:text-white'"
                     @click="pestañaLateral = 'agente'">
               <i data-lucide="sparkles" class="w-3.5 h-3.5"></i>
               <span>Agente</span>
             </button>
-            <button class="flex-1 py-2 text-xs font-bold uppercase tracking-wider text-center border-b-2 transition flex items-center justify-center gap-1.5"
-                    :class="pestañaLateral === 'speech' ? 'border-sky-500 text-sky-400 bg-slate-800/40' : 'border-transparent text-slate-400 hover:text-white'"
+            <button class="flex-1 py-2 text-xs font-bold text-center border-b-2 transition flex items-center justify-center gap-1.5"
+                    :class="pestañaLateral === 'speech' ? 'border-sol text-white bg-slate-800/40' : 'border-transparent text-slate-400 hover:text-white'"
                     @click="pestañaLateral = 'speech'">
               <i data-lucide="file-text" class="w-3.5 h-3.5"></i>
               <span>Mi speech</span>
             </button>
-            <button class="flex-1 py-2 text-xs font-bold uppercase tracking-wider text-center border-b-2 transition flex items-center justify-center gap-1.5"
-                    :class="pestañaLateral === 'agenda' ? 'border-sky-500 text-sky-400 bg-slate-800/40' : 'border-transparent text-slate-400 hover:text-white'"
+            <button class="flex-1 py-2 text-xs font-bold text-center border-b-2 transition flex items-center justify-center gap-1.5"
+                    :class="pestañaLateral === 'agenda' ? 'border-sol text-white bg-slate-800/40' : 'border-transparent text-slate-400 hover:text-white'"
                     @click="pestañaLateral = 'agenda'">
               <i data-lucide="list-ordered" class="w-3.5 h-3.5"></i>
               <span>Agenda</span>
@@ -704,21 +763,21 @@ Acuerdos y cierre</textarea>
             <div id="contenedor-mensajes-chat" class="flex-1 overflow-y-auto space-y-2 mb-2 pr-1 text-xs">
               <template x-for="msg in (salaActual ? salaActual.chat_grupal : [])" :key="msg.id">
                 <div class="p-2 rounded-lg bg-slate-900/60 border border-slate-800/60">
-                  <span class="font-bold block text-[11px]" :style="`color: ${msg.color}`" x-text="msg.nombre"></span>
+                  <span class="font-bold block text-xs" :style="`color: ${msg.color}`" x-text="msg.nombre"></span>
                   <span class="text-slate-200" x-text="msg.texto"></span>
                 </div>
               </template>
             </div>
             <form @submit.prevent="enviarMensajeChatGrupal()" class="flex gap-1.5">
               <input type="text" x-model="mensajeChatInput" placeholder="Mensaje para el equipo..."
-                     class="flex-1 px-2.5 py-1.5 bg-slate-900 border border-slate-700 rounded-lg text-xs text-white focus:outline-none focus:border-sky-500">
+                     class="flex-1 px-2.5 py-1.5 bg-slate-900 border border-slate-700 rounded-lg text-xs text-white focus:outline-none focus:border-sol">
               <button type="button" @click="alternarDictadoPorVoz('chat')"
                       class="px-2 py-1.5 rounded-lg border text-xs transition"
                       :class="dictandoEn === 'chat' ? 'bg-rose-500/20 border-rose-500/50 text-rose-300 animate-pulse' : 'bg-slate-800 border-slate-700 text-slate-400 hover:text-white'"
                       title="Dictar mensaje por voz">
                 <i data-lucide="mic" class="w-3.5 h-3.5"></i>
               </button>
-              <button type="submit" class="p-1.5 bg-sky-600 hover:bg-sky-500 text-white rounded-lg">
+              <button type="submit" class="boton boton-primario boton-cuadrado">
                 <i data-lucide="send" class="w-3.5 h-3.5"></i>
               </button>
             </form>
@@ -728,11 +787,11 @@ Acuerdos y cierre</textarea>
           <div x-show="pestañaLateral === 'agente'" class="flex-1 flex flex-col p-2.5 overflow-hidden">
 
             <!-- Subvista A: Chat normal con el agente -->
-            <div x-show="!modoFormatoAporte" class="flex-1 flex flex-col overflow-hidden">
-              <div class="text-[11px] text-sky-400 font-semibold mb-1.5 flex items-center justify-between border-b border-slate-800 pb-1">
+            <div class="flex-1 flex flex-col overflow-hidden">
+              <div class="text-xs text-sky-400 font-semibold mb-1.5 flex items-center justify-between border-b border-slate-800 pb-1">
                 <span>Diálogo confidencial con el agente</span>
                 <button @click="generarFormatoDesdeChat()" :disabled="cargandoFormatoAporte"
-                        class="px-2 py-0.5 rounded bg-sky-950 border border-sky-800 text-sky-300 hover:text-white text-[10px] flex items-center gap-1 font-medium">
+                        class="px-2 py-0.5 rounded bg-sky-950 border border-sky-800 text-sky-300 hover:text-white text-xs flex items-center gap-1 font-medium">
                   <i data-lucide="file-edit" class="w-3 h-3"></i>
                   <span>Generar formato de aporte</span>
                 </button>
@@ -746,7 +805,7 @@ Acuerdos y cierre</textarea>
                 <template x-for="(ch, idx) in historialChatAgente" :key="idx">
                   <div class="p-2 rounded-lg text-xs leading-relaxed"
                        :class="ch.rol === 'user' ? 'bg-slate-800/80 border border-slate-700 text-slate-200 ml-4' : 'bg-slate-900 border border-sky-900/60 text-sky-200 mr-4'">
-                    <span class="font-bold text-[10px] block text-slate-400 mb-0.5" x-text="ch.rol === 'user' ? 'Tú' : 'Agente'"></span>
+                    <span class="font-bold text-xs block text-slate-400 mb-0.5" x-text="ch.rol === 'user' ? 'Tú' : 'Agente'"></span>
                     <span x-text="ch.contenido"></span>
                   </div>
                 </template>
@@ -755,86 +814,19 @@ Acuerdos y cierre</textarea>
               <!-- Formulario de chat simple con opción de voz -->
               <form @submit.prevent="enviarMensajeAgente()" class="flex gap-1.5">
                 <input type="text" x-model="mensajeAgenteInput" placeholder="Pregunta o debate una idea con el agente..."
-                       class="flex-1 px-2.5 py-1.5 bg-slate-900 border border-slate-700 rounded-lg text-xs text-white focus:outline-none focus:border-sky-500">
+                       class="flex-1 px-2.5 py-1.5 bg-slate-900 border border-slate-700 rounded-lg text-xs text-white focus:outline-none focus:border-sol">
                 <button type="button" @click="alternarDictadoPorVoz('agente')"
                         class="px-2 py-1.5 rounded-lg border text-xs transition"
                         :class="dictandoEn === 'agente' ? 'bg-rose-500/20 border-rose-500/50 text-rose-300 animate-pulse' : 'bg-slate-800 border-slate-700 text-slate-400 hover:text-white'"
                         title="Dictar al agente por voz">
                   <i data-lucide="mic" class="w-3.5 h-3.5"></i>
                 </button>
-                <button type="submit" :disabled="cargandoAgente" class="p-1.5 bg-sky-600 hover:bg-sky-500 text-white rounded-lg disabled:opacity-50">
+                <button type="submit" :disabled="cargandoAgente" class="boton boton-primario boton-cuadrado">
                   <i data-lucide="sparkles" class="w-3.5 h-3.5"></i>
                 </button>
               </form>
             </div>
 
-            <!-- Subvista B: Formato de aporte editable antes de ser publicado -->
-            <div x-show="modoFormatoAporte" class="flex-1 flex flex-col overflow-y-auto space-y-2.5 text-xs">
-              <div class="flex items-center justify-between border-b border-slate-800 pb-1.5">
-                <span class="font-bold text-sky-400 text-xs">Formato de aporte editable</span>
-                <button @click="modoFormatoAporte = false" class="text-slate-400 hover:text-white text-[11px]">✕ Volver al chat</button>
-              </div>
-
-              <div>
-                <label class="block text-[11px] font-semibold text-slate-300 uppercase mb-1">Título de la propuesta:</label>
-                <input type="text" x-model="formatoAporteBorrador.titulo"
-                       class="w-full px-2.5 py-1.5 bg-slate-900 border border-slate-700 rounded text-xs text-white focus:outline-none focus:border-sky-500">
-              </div>
-
-              <div>
-                <label class="block text-[11px] font-semibold text-slate-300 uppercase mb-1">Contenido / Justificación:</label>
-                <textarea x-model="formatoAporteBorrador.contenido" rows="3"
-                          class="w-full px-2.5 py-1.5 bg-slate-900 border border-slate-700 rounded text-xs text-white focus:outline-none focus:border-sky-500"></textarea>
-              </div>
-
-              <div>
-                <label class="block text-[11px] font-semibold text-slate-300 uppercase mb-1">Puntos clave / Acciones:</label>
-                <div class="space-y-1 mb-1.5">
-                  <template x-for="(pt, pIdx) in formatoAporteBorrador.puntos_clave" :key="pIdx">
-                    <div class="flex items-center justify-between p-1.5 bg-slate-900 rounded border border-slate-800 text-[11px]">
-                      <span class="text-slate-200" x-text="pt"></span>
-                      <button @click="eliminarPuntoClave(pIdx)" class="text-rose-400 hover:text-rose-300 text-xs">✕</button>
-                    </div>
-                  </template>
-                </div>
-                <div class="flex gap-1.5">
-                  <input type="text" x-model="nuevoPuntoClaveInput" placeholder="Añadir punto medible..."
-                         class="flex-1 px-2 py-1 bg-slate-900 border border-slate-800 rounded text-[11px] text-white">
-                  <button @click="agregarPuntoClave()" class="px-2 py-1 bg-slate-800 text-slate-300 rounded text-[11px]">
-                    +
-                  </button>
-                </div>
-              </div>
-
-              <!-- Evaluación u observaciones del agente -->
-              <template x-if="evaluacionIaFormato">
-                <div class="p-2.5 rounded-lg bg-sky-950/40 border border-sky-800/60 text-xs">
-                  <span class="font-bold text-sky-400 text-[11px] block mb-0.5">Observación del Agente:</span>
-                  <p class="text-slate-300 text-[11px] mb-2" x-text="evaluacionIaFormato.evaluacion"></p>
-                  <template x-if="evaluacionIaFormato.sugerencia_mejora && evaluacionIaFormato.sugerencia_mejora !== formatoAporteBorrador.contenido">
-                    <div>
-                      <span class="text-[10px] text-slate-400 block mb-0.5">Texto sugerido mejorado:</span>
-                      <p class="text-sky-200 text-[11px] italic mb-1.5" x-text="evaluacionIaFormato.sugerencia_mejora"></p>
-                      <button @click="aplicarSugerenciaIaEnBorrador()" class="px-2 py-0.5 rounded bg-sky-600 text-white text-[10px]">
-                        Adoptar sugerencia en mi borrador
-                      </button>
-                    </div>
-                  </template>
-                </div>
-              </template>
-
-              <!-- Botones de validación y publicación explícita -->
-              <div class="flex gap-2 pt-2 border-t border-slate-800">
-                <button @click="solicitarRevisionAgente()" :disabled="cargandoFormatoAporte"
-                        class="flex-1 py-1.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-medium border border-slate-700">
-                  Solicitar validación al agente
-                </button>
-                <button @click="publicarAporteOficial()"
-                        class="flex-1 py-1.5 rounded bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold">
-                  Publicar aporte oficial
-                </button>
-              </div>
-            </div>
 
           </div>
 
@@ -843,17 +835,17 @@ Acuerdos y cierre</textarea>
             <div class="flex items-center justify-between border-b border-slate-800 pb-1.5">
               <div>
                 <span class="font-bold text-sky-400 text-xs block">Mi speech preparado</span>
-                <span class="text-[10px] text-slate-400">Tus notas sincronizadas con tu cuenta</span>
+                <span class="text-xs text-slate-400">Tus notas sincronizadas con tu cuenta</span>
               </div>
               <div class="flex items-center gap-1.5">
                 <button type="button" @click="alternarDictadoPorVoz('speech')"
-                        class="px-2 py-0.5 rounded border text-[10px] transition flex items-center gap-1"
+                        class="px-2 py-0.5 rounded border text-xs transition flex items-center gap-1"
                         :class="dictandoEn === 'speech' ? 'bg-rose-500/20 border-rose-500/50 text-rose-300 animate-pulse' : 'bg-slate-800 border-slate-700 text-slate-300 hover:text-white'">
                   <i data-lucide="mic" class="w-3 h-3"></i>
                   <span x-text="dictandoEn === 'speech' ? 'Dictando...' : 'Dictar'"></span>
                 </button>
                 <button @click="asistirSpeechConIa('Optimizar speech para intervenir en este momento')" :disabled="cargandoIaSpeech"
-                        class="px-2 py-0.5 rounded bg-sky-950 border border-sky-800 text-sky-300 hover:text-white text-[10px] flex items-center gap-1 font-medium">
+                        class="px-2 py-0.5 rounded bg-sky-950 border border-sky-800 text-sky-300 hover:text-white text-xs flex items-center gap-1 font-medium">
                   <i data-lucide="sparkles" class="w-3 h-3"></i>
                   <span x-text="cargandoIaSpeech ? 'Optimizando...' : 'Pulir con IA'"></span>
                 </button>
@@ -862,21 +854,21 @@ Acuerdos y cierre</textarea>
 
             <div>
               <textarea x-model="speechPlanTexto" rows="5" placeholder="Escribe o revisa aquí tus argumentos para la sesión..."
-                        class="w-full px-2.5 py-2 bg-slate-900 border border-slate-700 rounded-lg text-xs text-white focus:outline-none focus:border-sky-500 leading-relaxed"></textarea>
+                        class="w-full px-2.5 py-2 bg-slate-900 border border-slate-700 rounded-lg text-xs text-white focus:outline-none focus:border-sol leading-relaxed"></textarea>
             </div>
 
             <!-- Sugerencia rápida de IA si existe -->
             <template x-if="resultadoIaSpeech">
               <div class="p-2.5 rounded-lg bg-sky-950/40 border border-sky-800/60 text-xs space-y-1.5">
                 <div class="flex items-center justify-between">
-                  <span class="font-bold text-sky-300 text-[11px]">Propuesta de la IA:</span>
-                  <button @click="aplicarSpeechOptimizado()" class="px-2 py-0.5 rounded bg-sky-600 text-white text-[10px] font-semibold">
+                  <span class="font-bold text-sky-300 text-xs">Propuesta de la IA:</span>
+                  <button @click="aplicarSpeechOptimizado()" class="boton boton-primario boton-compacto">
                     Adoptar
                   </button>
                 </div>
-                <p class="text-slate-200 text-[11px] leading-relaxed whitespace-pre-line" x-text="resultadoIaSpeech.speech_optimizado"></p>
+                <p class="text-slate-200 text-xs leading-relaxed whitespace-pre-line" x-text="resultadoIaSpeech.speech_optimizado"></p>
                 <template x-if="resultadoIaSpeech.consejo_oratoria">
-                  <span class="text-[10px] text-amber-300 block italic" x-text="resultadoIaSpeech.consejo_oratoria"></span>
+                  <span class="text-xs text-amber-300 block italic" x-text="resultadoIaSpeech.consejo_oratoria"></span>
                 </template>
               </div>
             </template>
@@ -884,18 +876,18 @@ Acuerdos y cierre</textarea>
             <!-- Acciones rápidas de oratoria -->
             <div class="flex flex-wrap gap-1">
               <button @click="asistirSpeechConIa('Hacerlo más breve y directo en 2 oraciones')" :disabled="cargandoIaSpeech"
-                      class="px-2 py-0.5 rounded bg-slate-900 border border-slate-800 hover:border-slate-700 text-[10px] text-slate-300">
+                      class="px-2 py-0.5 rounded bg-slate-900 border border-slate-800 hover:border-slate-700 text-xs text-slate-300">
                 Resumir en 2 oraciones
               </button>
               <button @click="asistirSpeechConIa('Enfocar el discurso en el tema activo')" :disabled="cargandoIaSpeech"
-                      class="px-2 py-0.5 rounded bg-slate-900 border border-slate-800 hover:border-slate-700 text-[10px] text-slate-300">
+                      class="px-2 py-0.5 rounded bg-slate-900 border border-slate-800 hover:border-slate-700 text-xs text-slate-300">
                 Alinear con tema activo
               </button>
             </div>
 
             <div class="pt-2 border-t border-slate-800 flex justify-between items-center">
               <button @click="guardarSpeech()" :disabled="guardandoSpeech"
-                      class="w-full py-1.5 rounded bg-sky-600 hover:bg-sky-500 text-white text-xs font-semibold flex items-center justify-center gap-1.5">
+                      class="boton boton-primario w-full">
                 <i data-lucide="save" class="w-3.5 h-3.5"></i>
                 <span x-text="guardandoSpeech ? 'Guardando...' : 'Guardar cambios'"></span>
               </button>
@@ -905,7 +897,7 @@ Acuerdos y cierre</textarea>
           <!-- 4. AGENDA DE LA REUNIÓN (Con adición de temas y avance) -->
           <div x-show="pestañaLateral === 'agenda'" class="flex-1 flex flex-col p-2.5 overflow-y-auto">
             <div class="flex items-center justify-between mb-2.5">
-              <span class="text-xs font-bold uppercase tracking-wider text-slate-300">Agenda</span>
+              <span class="text-xs font-bold text-slate-300">Agenda</span>
               <button @click="mostrarAgregarTema = !mostrarAgregarTema" class="text-xs text-sky-400 hover:text-sky-300 font-semibold flex items-center gap-1">
                 <i data-lucide="plus" class="w-3.5 h-3.5"></i>
                 <span>Nuevo tema</span>
@@ -915,7 +907,7 @@ Acuerdos y cierre</textarea>
             <div x-show="mostrarAgregarTema" x-transition class="mb-2.5 p-2 rounded-lg bg-slate-900 border border-slate-700 space-y-1.5">
               <input type="text" x-model="nuevoTemaInput" placeholder="Título del nuevo tema..."
                      class="w-full px-2 py-1 bg-slate-950 border border-slate-800 rounded text-xs text-white">
-              <button @click="agregarTema()" class="w-full py-1 bg-sky-600 text-white rounded text-xs font-semibold">
+              <button @click="agregarTema()" class="boton boton-primario boton-compacto w-full">
                 Guardar tema
               </button>
             </div>
@@ -925,7 +917,7 @@ Acuerdos y cierre</textarea>
                 <div class="p-2 rounded-lg border flex items-center justify-between"
                      :class="salaActual && salaActual.tema_activo && salaActual.tema_activo.id === tema.id ? 'bg-amber-500/10 border-amber-500/40 text-amber-200' : 'bg-slate-900/40 border-slate-800 text-slate-300'">
                   <div>
-                    <span class="text-[10px] block font-bold" x-text="`Tema ${idx + 1}`"></span>
+                    <span class="text-xs block font-bold" x-text="`Tema ${idx + 1}`"></span>
                     <span x-text="tema.titulo"></span>
                   </div>
                   <template x-if="tema.completado">
@@ -935,7 +927,7 @@ Acuerdos y cierre</textarea>
               </template>
             </div>
 
-            <button class="w-full mt-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-slate-200"
+            <button class="boton boton-secundario w-full mt-2.5"
                     @click="avanzarTema()">
               Siguiente tema o cerrar
             </button>
@@ -944,31 +936,108 @@ Acuerdos y cierre</textarea>
         </div>
       </div>
 
-      <!-- Barra inferior ejecutiva de controles -->
-      <div class="mt-2.5 flex items-center justify-center gap-2.5">
-        <button class="p-2.5 rounded-lg border transition shadow text-xs"
-                :class="micActivo ? 'bg-slate-800 border-slate-700 text-white' : 'bg-rose-500/10 border-rose-500/30 text-rose-400'"
-                @click="alternarMic()" title="Micrófono">
-          <i data-lucide="mic" class="w-4 h-4" x-show="micActivo"></i>
-          <i data-lucide="mic-off" class="w-4 h-4" x-show="!micActivo"></i>
+      <dialog x-ref="editorAporte" class="editor-aporte rounded-xl border border-slate-700 bg-slate-950 p-4 text-slate-100"
+              aria-labelledby="titulo-editor-aporte" @cancel="if (publicandoAporte) $event.preventDefault()">
+        <form class="space-y-3" @submit.prevent="publicarAporteOficial()">
+          <div class="flex items-center justify-between border-b border-slate-800 pb-1.5">
+            <h2 id="titulo-editor-aporte" class="font-semibold">Publicar aporte</h2>
+            <button type="button" class="boton boton-secundario" :disabled="publicandoAporte" @click="$refs.editorAporte.close()">Cerrar</button>
+          </div>
+
+          <div>
+            <label for="titulo-aporte" class="block mb-1">Título (opcional)</label>
+            <input id="titulo-aporte" type="text" x-model="formatoAporteBorrador.titulo"
+                   class="w-full px-2.5 py-1.5 bg-slate-900 border border-slate-700 rounded text-xs text-white focus:outline-none focus:border-sol">
+          </div>
+
+          <div>
+            <label for="contenido-aporte" class="block mb-1">Tu aporte</label>
+            <textarea id="contenido-aporte" x-model="formatoAporteBorrador.contenido" rows="4" required maxlength="2000" autofocus
+                      class="w-full px-2.5 py-1.5 bg-slate-900 border border-slate-700 rounded text-xs text-white focus:outline-none focus:border-sol"></textarea>
+          </div>
+
+          <div>
+            <label for="punto-clave-aporte" class="block mb-1">Puntos clave (opcional)</label>
+            <div class="space-y-1 mb-1.5">
+              <template x-for="(pt, pIdx) in formatoAporteBorrador.puntos_clave" :key="pIdx">
+                <div class="flex items-center justify-between p-1.5 bg-slate-900 rounded border border-slate-800 text-xs">
+                  <span class="text-slate-200" x-text="pt"></span>
+                  <button type="button" @click="eliminarPuntoClave(pIdx)" class="text-rose-400 hover:text-rose-300 text-xs">✕</button>
+                </div>
+              </template>
+            </div>
+            <div class="flex gap-1.5">
+              <input id="punto-clave-aporte" type="text" @keydown.enter.prevent="agregarPuntoClave()" x-model="nuevoPuntoClaveInput" placeholder="Añadir punto medible..."
+                     class="flex-1 px-2 py-1 bg-slate-900 border border-slate-800 rounded text-xs text-white">
+              <button type="button" aria-label="Añadir punto clave" @click="agregarPuntoClave()" class="px-2 py-1 bg-slate-800 text-slate-300 rounded text-xs">
+                +
+              </button>
+            </div>
+          </div>
+
+          <!-- Evaluación u observaciones del agente -->
+          <template x-if="evaluacionIaFormato">
+            <div class="p-2.5 rounded-lg bg-sky-950/40 border border-sky-800/60 text-xs">
+              <span class="font-bold text-sky-400 text-xs block mb-0.5">Observación del Agente:</span>
+              <p class="text-slate-300 text-xs mb-2" x-text="evaluacionIaFormato.evaluacion"></p>
+              <template x-if="evaluacionIaFormato.sugerencia_mejora && evaluacionIaFormato.sugerencia_mejora !== formatoAporteBorrador.contenido">
+                <div>
+                  <span class="text-xs text-slate-400 block mb-0.5">Texto sugerido mejorado:</span>
+                  <p class="text-sky-200 text-xs italic mb-1.5" x-text="evaluacionIaFormato.sugerencia_mejora"></p>
+                  <button type="button" @click="aplicarSugerenciaIaEnBorrador()" class="boton boton-primario boton-compacto">
+                    Adoptar sugerencia en mi borrador
+                  </button>
+                </div>
+              </template>
+            </div>
+          </template>
+
+          <p x-show="errorAporte" role="alert" class="text-rose-300 text-sm" x-text="errorAporte"></p>
+          <div class="flex gap-2 pt-2 border-t border-slate-800">
+            <button type="button" @click="solicitarRevisionAgente()" :disabled="cargandoFormatoAporte || publicandoAporte || !formatoAporteBorrador.contenido.trim()"
+                    class="boton boton-secundario flex-1">
+              Revisar con Gemini
+            </button>
+            <button type="submit" :disabled="cargandoFormatoAporte || publicandoAporte || !formatoAporteBorrador.contenido.trim()"
+                    class="boton boton-primario flex-1">
+              Publicar
+            </button>
+          </div>
+        </form>
+      </dialog>
+
+      <!-- Barra de controles de la llamada -->
+      <div class="controles-reunion" role="toolbar" aria-label="Controles de la reunión">
+        <button type="button" class="control-llamada" :class="micActivo ? '' : 'apagado'"
+                :aria-pressed="micActivo" @click="alternarMic()"
+                title="Micrófono">
+          <span class="control-llamada-icono">
+            <i data-lucide="mic" class="w-5 h-5" x-show="micActivo"></i>
+            <i data-lucide="mic-off" class="w-5 h-5" x-show="!micActivo"></i>
+          </span>
+          <span class="control-llamada-texto" x-text="micActivo ? 'Micrófono' : 'Silenciado'"></span>
         </button>
 
-        <button class="p-2.5 rounded-lg border transition shadow text-xs"
-                :class="camActiva ? 'bg-slate-800 border-slate-700 text-white' : 'bg-slate-900 border-slate-800 text-slate-400'"
-                @click="alternarCam()" title="Cámara">
-          <i data-lucide="video" class="w-4 h-4" x-show="camActiva"></i>
-          <i data-lucide="video-off" class="w-4 h-4" x-show="!camActiva"></i>
+        <button type="button" class="control-llamada" :class="camActiva ? '' : 'apagado'"
+                :aria-pressed="camActiva" @click="alternarCam()"
+                title="Cámara">
+          <span class="control-llamada-icono">
+            <i data-lucide="video" class="w-5 h-5" x-show="camActiva"></i>
+            <i data-lucide="video-off" class="w-5 h-5" x-show="!camActiva"></i>
+          </span>
+          <span class="control-llamada-texto" x-text="camActiva ? 'Cámara' : 'Sin cámara'"></span>
         </button>
 
-        <button class="p-2.5 rounded-lg border transition shadow text-xs"
-                :class="manoLevantada ? 'bg-amber-500/20 border-amber-500/40 text-amber-400' : 'bg-slate-800 border-slate-700 text-white'"
-                @click="alternarMano()" title="Pedir palabra">
-          <i data-lucide="hand" class="w-4 h-4"></i>
+        <button type="button" class="control-llamada" :class="manoLevantada ? 'destacado' : ''"
+                :aria-pressed="manoLevantada" @click="alternarMano()">
+          <span class="control-llamada-icono"><i data-lucide="hand" class="w-5 h-5"></i></span>
+          <span class="control-llamada-texto" x-text="manoLevantada ? 'Mano levantada' : 'Pedir palabra'"></span>
         </button>
 
-        <button class="px-4 py-2 rounded-lg bg-rose-600 hover:bg-rose-500 text-white font-semibold text-xs shadow"
-                @click="concluirReunion()">
-          Concluir reunión
+        <span class="controles-separador" aria-hidden="true"></span>
+
+        <button type="button" class="boton boton-peligro" @click="concluirReunion()">
+          <i data-lucide="phone-off" class="w-4 h-4"></i><span>Concluir reunión</span>
         </button>
       </div>
     </section>
@@ -978,8 +1047,8 @@ Acuerdos y cierre</textarea>
       <div class="tarjeta-vidrio rounded-2xl p-6 sm:p-7">
         <div class="flex items-center justify-between border-b border-slate-800 pb-3 mb-4">
           <div>
-            <span class="text-xs text-amber-500 font-bold uppercase tracking-wider">Acta ejecutiva</span>
-            <h2 class="text-xl font-bold text-white mt-0.5" x-text="salaActual ? salaActual.nombre : 'Reunión'"></h2>
+            <span class="text-xs text-amber-500 font-bold">Acta ejecutiva</span>
+            <h2 class="titulo-pantalla mt-1" x-text="salaActual ? salaActual.nombre : 'Reunión'"></h2>
           </div>
           <div class="text-right">
             <span class="text-xs text-slate-400 block">Balance final:</span>
@@ -999,15 +1068,15 @@ Acuerdos y cierre</textarea>
                  x-html="marked.parse(minutaGeneradaMarkdown)"></div>
 
             <div class="flex gap-2.5">
-              <button class="flex-1 py-2 rounded-lg bg-sky-600 hover:bg-sky-500 text-white font-semibold text-xs"
+              <button class="boton boton-primario flex-1"
                       @click="navigator.clipboard.writeText(minutaGeneradaMarkdown); alert('Minuta copiada');">
                 Copiar minuta
               </button>
-              <button class="flex-1 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-white font-semibold text-xs"
+              <button class="boton boton-secundario flex-1"
                       @click="window.print()">
                 Imprimir o PDF
               </button>
-              <button class="py-2 px-4 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs"
+              <button class="boton boton-secundario"
                       @click="navegarA('salas')">
                 Volver a salas
               </button>
@@ -1027,7 +1096,7 @@ Acuerdos y cierre</textarea>
           <i data-lucide="sparkles" class="w-4 h-4"></i>
         </div>
         <div>
-          <span class="text-[10px] font-bold uppercase tracking-wider text-amber-400">Invitación a deliberar</span>
+          <span class="text-xs font-bold text-amber-400">Invitación a deliberar</span>
           <h3 class="text-sm font-bold text-white">El anfitrión te invita a aportar</h3>
         </div>
       </div>
@@ -1037,16 +1106,16 @@ Acuerdos y cierre</textarea>
         <strong class="text-sky-300 block mt-1" x-text="invitacionAnfitrionRecibida ? invitacionAnfitrionRecibida.tema : 'Tema central'"></strong>
       </p>
 
-      <p class="text-[11px] text-slate-400 mb-4 bg-slate-900/60 p-2.5 rounded-lg border border-slate-800">
+      <p class="text-xs text-slate-400 mb-4 bg-slate-900/60 p-2.5 rounded-lg border border-slate-800">
         Puedes preparar tu propuesta con la asistencia del agente o dejar pasar esta invitación de manera discreta sin notificar al resto del equipo.
       </p>
 
       <div class="flex gap-2">
-        <button class="flex-1 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium text-xs transition"
+        <button class="boton boton-secundario flex-1"
                 @click="responderInvitacionAnfitrion(false)">
           Dejar pasar
         </button>
-        <button class="flex-1 py-2 rounded-lg bg-sky-600 hover:bg-sky-500 font-semibold text-white text-xs transition flex items-center justify-center gap-1.5 shadow"
+        <button class="boton boton-primario flex-1"
                 @click="responderInvitacionAnfitrion(true)">
           <i data-lucide="message-square" class="w-3.5 h-3.5"></i>
           <span>Preparar aporte</span>
@@ -1060,30 +1129,30 @@ Acuerdos y cierre</textarea>
     <div class="tarjeta-vidrio rounded-2xl p-5 max-w-sm w-full shadow-2xl text-xs">
       <div class="flex items-center justify-between mb-3.5">
         <h3 class="text-sm font-bold text-white">Guardar enlace o código de reunión</h3>
-        <button class="text-slate-400 hover:text-white" @click="mostrarModalGuardarEnlace = false">✕</button>
+        <button class="text-slate-400 hover:text-white" @click="mostrarModalGuardarEnlace = false" aria-label="Cerrar">✕</button>
       </div>
 
-      <p class="text-slate-400 text-[11px] mb-3">
+      <p class="text-slate-400 text-xs mb-3">
         Ingresa el código o enlace que recibiste para tenerlo disponible en tu panel y planificar tu speech con anticipación.
       </p>
 
       <form @submit.prevent="guardarEnlaceManual()" class="space-y-3 mb-2">
         <div>
-          <label class="block text-[11px] font-semibold text-slate-300 uppercase mb-1">Código o enlace de la reunión:</label>
+          <label class="block text-xs font-semibold text-slate-300 mb-1">Código o enlace de la reunión:</label>
           <input type="text" x-model="codigoGuardarInput" required placeholder="Ej. ORB-7842"
-                 class="w-full px-2.5 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-white font-mono text-xs uppercase focus:outline-none focus:border-sky-500">
+                 class="w-full px-2.5 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-white font-mono text-xs uppercase focus:outline-none focus:border-sol">
         </div>
         <div>
-          <label class="block text-[11px] font-semibold text-slate-300 uppercase mb-1">Nombre o referencia de la sesión (opcional):</label>
+          <label class="block text-xs font-semibold text-slate-300 mb-1">Nombre o referencia de la sesión (opcional):</label>
           <input type="text" x-model="nombreGuardarInput" placeholder="Ej. Comité Directivo de Proyecto"
-                 class="w-full px-2.5 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-white text-xs focus:outline-none focus:border-sky-500">
+                 class="w-full px-2.5 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-white text-xs focus:outline-none focus:border-sol">
         </div>
 
         <div class="flex gap-2 pt-2">
-          <button type="button" @click="mostrarModalGuardarEnlace = false" class="w-1/3 py-2 rounded-lg bg-slate-800 text-slate-300 text-xs">
+          <button type="button" @click="mostrarModalGuardarEnlace = false" class="boton boton-secundario w-1/3">
             Cancelar
           </button>
-          <button type="submit" class="w-2/3 py-2 rounded-lg bg-sky-600 hover:bg-sky-500 font-semibold text-white text-xs">
+          <button type="submit" class="boton boton-primario w-2/3">
             Guardar en mi cuenta
           </button>
         </div>
@@ -1096,7 +1165,7 @@ Acuerdos y cierre</textarea>
     <div class="tarjeta-vidrio rounded-2xl p-5 max-w-sm w-full shadow-2xl text-xs">
       <div class="flex items-center justify-between mb-3.5">
         <h3 class="text-sm font-bold text-white">Centro de accesibilidad e inclusión</h3>
-        <button class="text-slate-400 hover:text-white" @click="mostrarModalAccesibilidad = false">✕</button>
+        <button class="text-slate-400 hover:text-white" @click="mostrarModalAccesibilidad = false" aria-label="Cerrar centro de accesibilidad">✕</button>
       </div>
 
       <div class="space-y-2 mb-4">
@@ -1125,7 +1194,7 @@ Acuerdos y cierre</textarea>
         </button>
       </div>
 
-      <button class="w-full py-2 rounded-lg bg-sky-600 hover:bg-sky-500 font-semibold text-white"
+      <button class="boton boton-primario w-full"
               @click="mostrarModalAccesibilidad = false">
         Aceptar
       </button>
